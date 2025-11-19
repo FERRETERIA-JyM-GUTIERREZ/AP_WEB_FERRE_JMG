@@ -167,13 +167,13 @@ const ProductoCard = ({ producto, onVerDetalles, onWhatsApp, onFormulario }) => 
       <div className={imageWrapperClasses}>
         {producto.imagen ? (
           <img 
-            src={`${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
+            src={`https://apwebferrejmg-production.up.railway.app/img_productos/${producto.imagen}`}
             alt={producto.nombre} 
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             onLoad={() => console.log('✅ Imagen cargada exitosamente:', producto.imagen)}
             onError={(e) => {
               console.error('❌ Error al cargar imagen:', producto.imagen);
-              console.error('❌ Ruta completa:', `${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
+              console.error('❌ Ruta completa:', `https://apwebferrejmg-production.up.railway.app/img_productos/${producto.imagen}`);
               // Si la imagen falla, mostrar placeholder SVG
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'block';

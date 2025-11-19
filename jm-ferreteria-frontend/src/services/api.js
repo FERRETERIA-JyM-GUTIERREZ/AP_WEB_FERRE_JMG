@@ -23,17 +23,15 @@ export const getApiBaseUrl = () => {
 
 // Función helper para obtener la URL base del backend (sin /api)
 export const getBackendBaseUrl = () => {
-  // Siempre usar la URL de producción del backend para las imágenes
+  // URL de producción del backend
   const backendUrl = 'https://apwebferrejmg-production.up.railway.app';
   
   // En desarrollo, intentar usar localhost si está disponible
-  if (process.env.NODE_ENV === 'development') {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8000';
-    }
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:8000';
   }
   
+  // Siempre devolver la URL de producción
   return backendUrl;
 };
 
