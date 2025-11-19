@@ -6,6 +6,7 @@ import { debugAPI } from '../utils/debug';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import RolePermissionInfo from '../components/RolePermissionInfo';
+import { getBackendBaseUrl } from '../services/api';
 
 const Inventario = () => {
   const [productos, setProductos] = useState([]);
@@ -125,7 +126,7 @@ const Inventario = () => {
       setForm({ ...producto });
       // Si el producto tiene imagen existente, mostrar preview
       if (producto.imagen) {
-        setImagenPreview(`/img_productos/${producto.imagen}`);
+        setImagenPreview(`${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
       } else {
         setImagenPreview(null);
       }
