@@ -5,6 +5,7 @@ import { FaHeart, FaShoppingCart, FaEye, FaSync, FaCloud } from 'react-icons/fa'
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import favoritosService from '../services/favoritosService';
+import { getBackendBaseUrl } from '../services/api';
 
 const Wishlist = () => {
   const [wishlist, setWishlist] = useState({ items: [] });
@@ -162,7 +163,7 @@ const Wishlist = () => {
                 <div className="relative overflow-hidden bg-gray-50 h-48">
                   {item.producto.imagen ? (
                 <img
-                  src={`/img_productos/${item.producto.imagen}`}
+                  src={`${getBackendBaseUrl()}/img_productos/${item.producto.imagen}`}
                   alt={item.producto.nombre}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />

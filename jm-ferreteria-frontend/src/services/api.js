@@ -21,6 +21,26 @@ export const getApiBaseUrl = () => {
   return process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 };
 
+// Función helper para obtener la URL base del backend (sin /api)
+export const getBackendBaseUrl = () => {
+  const apiUrl = getApiBaseUrl();
+  // Si la URL termina con /api, la removemos
+  if (apiUrl.endsWith('/api')) {
+    return apiUrl.replace('/api', '');
+  }
+  // Si es una ruta relativa, usar la URL de producción
+  if (apiUrl.startsWith('/')) {
+    return 'https://apwebferrejmg-production.up.railway.app';
+  }
+  // Si ya es una URL completa, extraer el dominio
+  try {
+    const url = new URL(apiUrl);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return 'https://apwebferrejmg-production.up.railway.app';
+  }
+};
+
 const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({

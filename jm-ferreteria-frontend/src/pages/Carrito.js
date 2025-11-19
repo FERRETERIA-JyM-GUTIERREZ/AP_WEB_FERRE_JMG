@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { FaTrash, FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { getBackendBaseUrl } from '../services/api';
 
 const Carrito = () => {
   const { isAuthenticated } = useAuth();
@@ -101,7 +102,7 @@ const Carrito = () => {
                   <div className="w-20 h-20 flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200 flex-shrink-0">
                     {item.imagen ? (
                       <img
-                        src={`/img_productos/${item.imagen}`}
+                        src={`${getBackendBaseUrl()}/img_productos/${item.imagen}`}
                         alt={item.nombre}
                         className="w-16 h-16 object-contain rounded-lg group-hover:scale-110 transition-transform duration-300"
                         onLoad={() => console.log('✅ Imagen del carrito cargada:', item.imagen)}

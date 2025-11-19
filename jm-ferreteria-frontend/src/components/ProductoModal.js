@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
+import { getBackendBaseUrl } from '../services/api';
 
 const ProductoModal = ({ producto, isOpen, onClose }) => {
   const { addToCart } = useCart();
@@ -119,7 +120,7 @@ const ProductoModal = ({ producto, isOpen, onClose }) => {
               {/* Imagen del producto - mucho más pequeña */}
             <div className={`rounded-lg p-2 flex items-center justify-center mb-2 border ${isDarkMode ? 'bg-slate-800/60 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
                 <img
-                  src={`/img_productos/${producto.imagen}`}
+                  src={`${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
                   alt={producto.nombre}
                   className="max-w-full max-h-24 object-contain"
                   onError={(e) => {

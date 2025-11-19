@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { FaHeart, FaShoppingCart, FaEye, FaUserPlus, FaSync } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import favoritosService from '../services/favoritosService';
+import { getBackendBaseUrl } from '../services/api';
 
 const Favoritos = () => {
   const { user, isAuthenticated } = useAuth();
@@ -259,7 +260,7 @@ const Favoritos = () => {
                 <div className="relative overflow-hidden bg-gray-50 h-48">
                   {producto.imagen ? (
                     <img 
-                      src={`/img_productos/${producto.imagen}`}
+                      src={`${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
                       alt={producto.nombre} 
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />
