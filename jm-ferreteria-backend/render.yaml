@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: jm-ferreteria-backend
+    env: php
+    plan: free
+    buildCommand: composer install --no-dev --optimize-autoloader && php artisan config:cache && php artisan route:cache && php artisan view:cache
+    startCommand: php -S 0.0.0.0:$PORT -t public
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: jm-ferreteria-db.cby8iosgukxi.us-east-2.rds.amazonaws.com
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: jm_ferreteria
+      - key: DB_USERNAME
+        value: admin
+      - key: DB_PASSWORD
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: APP_KEY
+        generateValue: php artisan key:generate --show
+

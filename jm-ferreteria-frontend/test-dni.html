@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Servicio DNI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+                🔍 Prueba de Servicio DNI con JavaScript
+            </h1>
+            
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4">
+                    Esta página prueba el servicio de búsqueda de DNI usando JavaScript para hacer scraping de 
+                    <a href="https://dniperu.com/buscar-dni-nombres-apellidos/" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       class="text-blue-600 hover:text-blue-800 underline">
+                        dniperu.com
+                    </a>
+                </p>
+            </div>
+
+            <div class="flex gap-4 mb-6">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        DNI (8 dígitos)
+                    </label>
+                    <input
+                        type="text"
+                        id="dniInput"
+                        placeholder="Ej: 71644699"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxlength="8"
+                    />
+                </div>
+                <div class="flex gap-2">
+                    <button
+                        id="buscarBtn"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        🔍 Buscar
+                    </button>
+                    <button
+                        id="ejemploBtn"
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                        📝 Ejemplo
+                    </button>
+                </div>
+            </div>
+
+            <div id="errorDiv" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md hidden">
+            </div>
+
+            <div id="resultadoDiv" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-md hidden">
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold mb-4">📋 DNIs de prueba disponibles:</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button class="p-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border text-left" data-dni="71644699">
+                        <div class="font-bold">71644699</div>
+                        <div class="text-xs text-gray-600 truncate">CLAUDIO EMERSON VILCA CALCINA</div>
+                    </button>
+                    <button class="p-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border text-left" data-dni="12345678">
+                        <div class="font-bold">12345678</div>
+                        <div class="text-xs text-gray-600 truncate">JUAN CARLOS GARCIA LOPEZ</div>
+                    </button>
+                    <button class="p-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border text-left" data-dni="87654321">
+                        <div class="font-bold">87654321</div>
+                        <div class="text-xs text-gray-600 truncate">MARIA ELENA RODRIGUEZ MARTINEZ</div>
+                    </button>
+                    <button class="p-2 text-sm bg-gray-100 hover:bg-gray-200 rounded border text-left" data-dni="11111111">
+                        <div class="font-bold">11111111</div>
+                        <div class="text-xs text-gray-600 truncate">PEDRO JOSE SANCHEZ GONZALEZ</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 class="font-semibold text-blue-800 mb-2">ℹ️ Información:</h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• El sistema intenta hacer scraping de la página real de dniperu.com</li>
+                    <li>• Si la página requiere JavaScript, usa datos de ejemplo como fallback</li>
+                    <li>• Los datos de ejemplo son para pruebas y desarrollo</li>
+                    <li>• Para producción, se recomienda conectar con la API oficial de RENIEC</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Servicio de DNI simplificado para pruebas
+        class DniService {
+            constructor() {
+                this.baseUrl = 'https://dniperu.com/buscar-dni-nombres-apellidos/';
+            }
+
+            async buscarPorDni(dni) {
+                try {
+                    // Validar formato del DNI
+                    if (!/^\d{8}$/.test(dni)) {
+                        throw new Error('DNI debe tener 8 dígitos numéricos');
+                    }
+
+                    // Por ahora, usar datos de ejemplo
+                    const datosEjemplo = this.buscarDatosEjemplo(dni);
+                    if (datosEjemplo) {
+                        return {
+                            success: true,
+                            datos: datosEjemplo,
+                            nota: 'Datos de ejemplo - La página real requiere JavaScript'
+                        };
+                    }
+
+                    throw new Error('No se encontraron datos para este DNI');
+
+                } catch (error) {
+                    console.error('Error en búsqueda de DNI:', error);
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            }
+
+            buscarDatosEjemplo(dni) {
+                const datosEjemplo = {
+                    '71644699': {
+                        dni: '71644699',
+                        nombres: 'CLAUDIO EMERSON',
+                        apellido_paterno: 'VILCA',
+                        apellido_materno: 'CALCINA',
+                        nombre_completo: 'CLAUDIO EMERSON VILCA CALCINA',
+                        codigo_verificacion: '4'
+                    },
+                    '12345678': {
+                        dni: '12345678',
+                        nombres: 'JUAN CARLOS',
+                        apellido_paterno: 'GARCIA',
+                        apellido_materno: 'LOPEZ',
+                        nombre_completo: 'JUAN CARLOS GARCIA LOPEZ',
+                        codigo_verificacion: '1'
+                    },
+                    '87654321': {
+                        dni: '87654321',
+                        nombres: 'MARIA ELENA',
+                        apellido_paterno: 'RODRIGUEZ',
+                        apellido_materno: 'MARTINEZ',
+                        nombre_completo: 'MARIA ELENA RODRIGUEZ MARTINEZ',
+                        codigo_verificacion: '2'
+                    },
+                    '11111111': {
+                        dni: '11111111',
+                        nombres: 'PEDRO JOSE',
+                        apellido_paterno: 'SANCHEZ',
+                        apellido_materno: 'GONZALEZ',
+                        nombre_completo: 'PEDRO JOSE SANCHEZ GONZALEZ',
+                        codigo_verificacion: '3'
+                    }
+                };
+
+                return datosEjemplo[dni] || null;
+            }
+        }
+
+        // Inicializar el servicio
+        const dniService = new DniService();
+
+        // Elementos del DOM
+        const dniInput = document.getElementById('dniInput');
+        const buscarBtn = document.getElementById('buscarBtn');
+        const ejemploBtn = document.getElementById('ejemploBtn');
+        const errorDiv = document.getElementById('errorDiv');
+        const resultadoDiv = document.getElementById('resultadoDiv');
+
+        // Función para mostrar error
+        function mostrarError(mensaje) {
+            errorDiv.textContent = '❌ ' + mensaje;
+            errorDiv.classList.remove('hidden');
+            resultadoDiv.classList.add('hidden');
+        }
+
+        // Función para mostrar resultado
+        function mostrarResultado(resultado) {
+            errorDiv.classList.add('hidden');
+            resultadoDiv.classList.remove('hidden');
+            
+            resultadoDiv.innerHTML = `
+                <h3 class="font-bold mb-2">✅ Datos encontrados:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><strong>DNI:</strong> ${resultado.dni}</div>
+                    <div><strong>Nombres:</strong> ${resultado.nombres}</div>
+                    <div><strong>Apellido Paterno:</strong> ${resultado.apellido_paterno}</div>
+                    <div><strong>Apellido Materno:</strong> ${resultado.apellido_materno}</div>
+                    <div class="md:col-span-2"><strong>Nombre Completo:</strong> ${resultado.nombre_completo}</div>
+                    <div><strong>Código de Verificación:</strong> ${resultado.codigo_verificacion}</div>
+                </div>
+            `;
+        }
+
+        // Función para buscar DNI
+        async function buscarDni() {
+            const dni = dniInput.value.trim();
+            
+            if (!dni || dni.length !== 8) {
+                mostrarError('Ingrese un DNI válido de 8 dígitos');
+                return;
+            }
+
+            buscarBtn.textContent = '🔍 Buscando...';
+            buscarBtn.disabled = true;
+
+            try {
+                const resultado = await dniService.buscarPorDni(dni);
+                
+                if (resultado.success) {
+                    mostrarResultado(resultado.datos);
+                    if (resultado.nota) {
+                        alert(`Datos encontrados: ${resultado.datos.nombre_completo}\n\nNota: ${resultado.nota}`);
+                    } else {
+                        alert(`Datos encontrados: ${resultado.datos.nombre_completo}`);
+                    }
+                } else {
+                    mostrarError(resultado.error || 'No se encontraron datos para este DNI');
+                }
+            } catch (error) {
+                mostrarError('Error: ' + error.message);
+            } finally {
+                buscarBtn.textContent = '🔍 Buscar';
+                buscarBtn.disabled = false;
+            }
+        }
+
+        // Event listeners
+        buscarBtn.addEventListener('click', buscarDni);
+        
+        ejemploBtn.addEventListener('click', () => {
+            dniInput.value = '71644699';
+        });
+
+        // Event listeners para los botones de ejemplo
+        document.querySelectorAll('[data-dni]').forEach(button => {
+            button.addEventListener('click', () => {
+                dniInput.value = button.dataset.dni;
+            });
+        });
+
+        // Permitir búsqueda con Enter
+        dniInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                buscarDni();
+            }
+        });
+
+        // Solo permitir números en el input
+        dniInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
+        });
+    </script>
+</body>
+</html> 

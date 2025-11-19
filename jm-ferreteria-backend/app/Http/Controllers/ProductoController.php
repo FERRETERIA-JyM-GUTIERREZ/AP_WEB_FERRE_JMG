@@ -1,0 +1,308 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Producto;
+use App\Models\Categoria;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class ProductoController extends Controller
+{
+    public function index()
+    {
+        try {
+            \Log::info('🔍 Solicitando lista de productos');
+            
+            $productos = Producto::with('categoria')->get();
+            
+            \Log::info('✅ Productos obtenidos exitosamente', [
+                'count' => $productos->count(),
+                'productos' => $productos->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'nombre' => $p->nombre,
+                        'categoria' => $p->categoria ? $p->categoria->nombre : 'Sin categoría'
+                    ];
+                })
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $productos
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ Error al obtener productos', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener productos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $producto = Producto::with('categoria')->find($id);
+            
+            if (!$producto) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Producto no encontrado'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $producto
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener producto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:200',
+            'descripcion' => 'nullable|string',
+            'precio' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'categoria_id' => 'required|exists:categorias,id',
+            'imagen' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $producto = Producto::create($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto creado exitosamente',
+                'data' => $producto
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear producto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $producto = Producto::find($id);
+        
+        if (!$producto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'sometimes|required|string|max:200',
+            'descripcion' => 'nullable|string',
+            'precio' => 'sometimes|required|numeric|min:0',
+            'stock' => 'sometimes|required|integer|min:0',
+            'categoria_id' => 'sometimes|required|exists:categorias,id',
+            'imagen' => 'nullable|string|max:255',
+            'activo' => 'sometimes|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $producto->update($request->all());
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto actualizado exitosamente',
+                'data' => $producto
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar producto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $producto = Producto::find($id);
+            
+            if (!$producto) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Producto no encontrado'
+                ], 404);
+            }
+            
+            $producto->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto eliminado exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar producto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Método público para catálogo (sin autenticación)
+    public function catalogo()
+    {
+        try {
+            $productos = Producto::with('categoria')
+                ->where('stock', '>', 0)
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $productos
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener catálogo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Método para búsqueda inteligente (sin autenticación)
+    public function buscar(Request $request)
+    {
+        try {
+            $query = $request->get('q', '');
+            $categoria = $request->get('categoria', '');
+            $precioMin = $request->get('precio_min', 0);
+            $precioMax = $request->get('precio_max', 999999);
+            
+            $productos = Producto::with('categoria')
+                ->where('stock', '>', 0);
+            
+            // Búsqueda por texto
+            if ($query) {
+                $productos->where(function($q) use ($query) {
+                    $q->where('nombre', 'LIKE', "%{$query}%")
+                      ->orWhere('descripcion', 'LIKE', "%{$query}%");
+                });
+            }
+            
+            // Filtro por categoría
+            if ($categoria) {
+                $productos->whereHas('categoria', function($q) use ($categoria) {
+                    $q->where('nombre', 'LIKE', "%{$categoria}%");
+                });
+            }
+            
+            // Filtro por precio
+            $productos->whereBetween('precio', [$precioMin, $precioMax]);
+            
+            $resultados = $productos->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $resultados,
+                'total' => $resultados->count(),
+                'query' => $query
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en la búsqueda: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Método para subir imágenes
+    public function uploadImage(Request $request)
+    {
+        try {
+            \Log::info('📤 Iniciando subida de imagen');
+            
+            $validator = Validator::make($request->all(), [
+                'imagen' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB máximo
+            ]);
+
+            if ($validator->fails()) {
+                \Log::error('❌ Validación fallida', $validator->errors()->toArray());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Archivo inválido',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            if ($request->hasFile('imagen')) {
+                $file = $request->file('imagen');
+                
+                // Generar nombre único
+                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                
+                // Crear directorio si no existe
+                $uploadPath = public_path('img_productos');
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+                
+                // Mover archivo
+                $file->move($uploadPath, $filename);
+                
+                \Log::info('✅ Imagen subida exitosamente', ['filename' => $filename]);
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Imagen subida exitosamente',
+                    'data' => [
+                        'filename' => $filename,
+                        'path' => 'img_productos/' . $filename
+                    ]
+                ]);
+            } else {
+                \Log::error('❌ No se encontró archivo de imagen');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se encontró archivo de imagen'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error('💥 Error al subir imagen', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al subir imagen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}

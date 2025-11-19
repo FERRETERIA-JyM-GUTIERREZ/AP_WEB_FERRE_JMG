@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/img/favicon.svg?v=7" type="image/svg+xml" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/img/favicon.svg?v=7" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/img/favicon.svg?v=7" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect para mejorar rendimiento -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <title>Ferretería J&M GUTIÉRREZ</title>
+    <script>
+      // Forzar cambio de favicon
+      (function() {
+        try {
+          var link = document.createElement('link');
+          link.rel = 'icon';
+          link.href = '/img/favicon.svg?v=' + Date.now();
+          link.type = 'image/svg+xml';
+          document.head.appendChild(link);
+          
+          // Remover favicons antiguos
+          var oldFavicons = document.querySelectorAll('link[rel="icon"]');
+          oldFavicons.forEach(function(favicon) {
+            if (favicon !== link) {
+              favicon.remove();
+            }
+          });
+        } catch (e) {
+          console.log('Error setting favicon:', e);
+        }
+      })();
+    </script>
+    
+  </head>
+  <body>
+    <noscript>Necesitas habilitar JavaScript para ejecutar esta aplicación.</noscript>
+    <div id="root"></div>
+  </body>
+</html> 

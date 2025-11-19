@@ -1,0 +1,45 @@
+# Archivos de entorno (NUNCA subir)
+.env
+.env.local
+.env.production
+.env.backup
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Build files
+build/
+dist/
+**/build/
+**/dist/
+
+# Vendor (Laravel)
+vendor/
+**/vendor/
+
+# Logs
+*.log
+**/*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel específico
+**/storage/*.key
+**/storage/logs/*
+**/bootstrap/cache/*
+**/public/storage
+**/public/hot
+
+# Archivos temporales
+*.tmp
+*.temp
+
