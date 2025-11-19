@@ -23,28 +23,18 @@ export const getApiBaseUrl = () => {
 
 // Función helper para obtener la URL base del backend (sin /api)
 export const getBackendBaseUrl = () => {
-  // En producción, usar directamente la URL del backend
-  if (process.env.NODE_ENV === 'production') {
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://apwebferrejmg-production.up.railway.app/api';
-    // Si la URL termina con /api, la removemos
-    if (apiUrl.endsWith('/api')) {
-      return apiUrl.replace('/api', '');
-    }
-    // Si es una ruta relativa, usar la URL de producción
-    if (apiUrl.startsWith('/')) {
-      return 'https://apwebferrejmg-production.up.railway.app';
-    }
-    // Si ya es una URL completa, extraer el dominio
-    try {
-      const url = new URL(apiUrl);
-      return `${url.protocol}//${url.host}`;
-    } catch {
-      return 'https://apwebferrejmg-production.up.railway.app';
+  // Siempre usar la URL de producción del backend para las imágenes
+  const backendUrl = 'https://apwebferrejmg-production.up.railway.app';
+  
+  // En desarrollo, intentar usar localhost si está disponible
+  if (process.env.NODE_ENV === 'development') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000';
     }
   }
   
-  // En desarrollo, usar localhost
-  return 'http://localhost:8000';
+  return backendUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
