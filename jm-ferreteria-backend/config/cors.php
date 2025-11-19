@@ -23,6 +23,7 @@ return [
             'http://127.0.0.1:3000',
             'http://127.0.0.1:5173',
             env('FRONTEND_URL'), // URL de producción del frontend
+            'https://ferreteriafrontend.vercel.app', // URL de Vercel
         ]),
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
