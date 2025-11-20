@@ -17,15 +17,18 @@ return [
     'allowed_methods' => ['*'],
     'allowed_origins' => env('APP_ENV') === 'local' 
         ? ['*'] // En desarrollo, permitir todos los orígenes
-        : array_filter([
+        : array_values(array_filter([
             'http://localhost:3000',
             'http://localhost:5173',
             'http://127.0.0.1:3000',
             'http://127.0.0.1:5173',
             env('FRONTEND_URL'), // URL de producción del frontend
             'https://ap-web-ferre-jmg.vercel.app', // URL de Vercel (nueva)
+            'https://ap-web-ferre-jmg.vercel.app/', // URL de Vercel con barra final
             'https://ferreteriafrontend.vercel.app', // URL de Vercel (antigua - mantener por compatibilidad)
-        ]),
+        ], function($value) {
+            return !empty($value); // Filtrar valores vacíos o null
+        })),
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
