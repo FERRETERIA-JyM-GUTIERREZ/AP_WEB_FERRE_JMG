@@ -1,12 +1,32 @@
 // Servicio para manejar productos en el chatbot
 const getApiBaseUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_API_URL || window.location.origin;
+    const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
+    // Si ya termina en /api, no añadir otro /api
+    if (baseUrl.endsWith('/api')) {
+      return baseUrl;
+    }
+    // Si termina en /api/, quitar la barra final y devolver
+    if (baseUrl.endsWith('/api/')) {
+      return baseUrl.slice(0, -1);
+    }
+    // Si no tiene /api, añadirlo
+    return `${baseUrl}/api`;
   }
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  // Si ya termina en /api, no añadir otro /api
+  if (baseUrl.endsWith('/api')) {
+    return baseUrl;
+  }
+  // Si termina en /api/, quitar la barra final y devolver
+  if (baseUrl.endsWith('/api/')) {
+    return baseUrl.slice(0, -1);
+  }
+  // Si no tiene /api, añadirlo
+  return `${baseUrl}/api`;
 };
 
-const API_BASE_URL = `${getApiBaseUrl()}/api`;
+const API_BASE_URL = getApiBaseUrl();
 
 class ProductService {
   // Buscar productos
