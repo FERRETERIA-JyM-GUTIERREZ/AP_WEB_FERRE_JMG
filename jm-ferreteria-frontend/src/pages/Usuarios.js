@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import RolePermissionInfo from '../components/RolePermissionInfo';
-
-// Configuración de URL de API
-const getApiUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_API_URL || window.location.origin;
-  }
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
-};
-
-const API_BASE = getApiUrl();
-const API_URL = `${API_BASE}/api/usuarios`;
-const API_USER = `${API_BASE}/api/user`;
 
 const initialForm = { name: '', email: '', password: '', rol: 'vendedor' };
 
@@ -50,21 +38,18 @@ const Usuarios = () => {
       }
     } else {
       // Si no hay usuario en localStorage, pedirlo a la API
-      const token = localStorage.getItem('token');
-      if (token) {
-        axios.get(API_USER, { headers: { Authorization: `Bearer ${token}` } })
-          .then(res => {
-            if (res.data && res.data.user) {
-              localStorage.setItem('user', JSON.stringify(res.data.user));
-              setUserName(res.data.user.name || '');
-              setUserRol(res.data.user.rol || '');
-            }
-          })
-          .catch(() => {
-            setUserName('');
-            setUserRol('');
-          });
-      }
+      api.get('/user')
+        .then(res => {
+          if (res.data && res.data.user) {
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+            setUserName(res.data.user.name || '');
+            setUserRol(res.data.user.rol || '');
+          }
+        })
+        .catch(() => {
+          setUserName('');
+          setUserRol('');
+        });
     }
   }, []);
 
@@ -103,14 +88,13 @@ const Usuarios = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
       const query = new URLSearchParams(params).toString();
-      const res = await axios.get(`${API_URL}${query ? `?${query}` : ''}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUsuarios(res.data.data);
+      const res = await api.get(`/usuarios${query ? `?${query}` : ''}`);
+      setUsuarios(res.data?.data || res.data || []);
     } catch (err) {
+      console.error('Error cargando usuarios:', err);
       setError('Error al obtener usuarios');
+      setUsuarios([]);
     }
     setLoading(false);
   };
@@ -118,12 +102,10 @@ const Usuarios = () => {
   const handleEliminar = async (id) => {
     if (!window.confirm('¿Seguro que deseas eliminar este usuario?')) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/usuarios/${id}`);
       setUsuarios(usuarios.filter(u => u.id !== id));
     } catch (err) {
+      console.error('Error eliminando usuario:', err);
       alert('Error al eliminar usuario');
     }
   };
@@ -167,22 +149,18 @@ const Usuarios = () => {
     e.preventDefault();
     setFormError(null);
     try {
-      const token = localStorage.getItem('token');
       if (editId) {
         // Editar usuario
-        await axios.put(`${API_URL}/${editId}`, form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.put(`/usuarios/${editId}`, form);
       } else {
         // Crear usuario
-        await axios.post(API_URL, form, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await api.post('/usuarios', form);
       }
       closeModal();
       fetchUsuarios();
     } catch (err) {
-      setFormError('Error al guardar usuario');
+      console.error('Error guardando usuario:', err);
+      setFormError(err.response?.data?.message || 'Error al guardar usuario');
     }
   };
 
