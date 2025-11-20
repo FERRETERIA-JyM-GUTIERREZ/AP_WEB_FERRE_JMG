@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { FaEye, FaHeart } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import favoritosService from '../services/favoritosService';
-import { getBackendBaseUrl } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
 const ProductoCard = ({ producto, onVerDetalles, onWhatsApp, onFormulario }) => {
