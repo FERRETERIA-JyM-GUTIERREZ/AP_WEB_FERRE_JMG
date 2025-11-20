@@ -1,6 +1,6 @@
 {
   "name": "jm-ferreteria-frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Frontend para Ferretería J&M GUTIÉRREZ",
   "private": true,
   "dependencies": {
