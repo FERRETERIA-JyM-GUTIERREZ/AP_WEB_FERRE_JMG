@@ -3,17 +3,30 @@ import axios from 'axios';
 // Configuración de URL de API (debe incluir /api al final)
 const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    // En producción, si REACT_APP_API_URL ya incluye /api, usarlo tal cual
-    // Si no, agregar /api
-    const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
-    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+    // En producción, usar la URL del backend de Railway
+    const baseUrl = process.env.REACT_APP_API_URL || 'https://apwebferrejmg-production.up.railway.app';
+    // Asegurar que termine en /api sin duplicar
+    if (baseUrl.endsWith('/api')) {
+      return baseUrl;
+    } else if (baseUrl.endsWith('/api/')) {
+      return baseUrl.slice(0, -1); // Quitar la barra final
+    } else {
+      return `${baseUrl}/api`;
+    }
   }
   // En desarrollo, asegurar que termine en /api
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+  if (baseUrl.endsWith('/api')) {
+    return baseUrl;
+  } else if (baseUrl.endsWith('/api/')) {
+    return baseUrl.slice(0, -1);
+  } else {
+    return `${baseUrl}/api`;
+  }
 };
 
 const API_URL = getApiUrl();
+console.log('🔧 authService - API_URL configurada:', API_URL);
 
 // Configurar axios para incluir el token en todas las peticiones
 axios.interceptors.request.use(
