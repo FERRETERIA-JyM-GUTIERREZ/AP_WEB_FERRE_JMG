@@ -2,19 +2,12 @@ import axios from 'axios';
 
 // Configuración de URL de API (debe incluir /api al final)
 const getApiUrl = () => {
+  // SIEMPRE usar la URL completa del backend en producción
   if (process.env.NODE_ENV === 'production') {
-    // En producción, usar la URL del backend de Railway
-    const baseUrl = process.env.REACT_APP_API_URL || 'https://apwebferrejmg-production.up.railway.app';
-    // Asegurar que termine en /api sin duplicar
-    if (baseUrl.endsWith('/api')) {
-      return baseUrl;
-    } else if (baseUrl.endsWith('/api/')) {
-      return baseUrl.slice(0, -1); // Quitar la barra final
-    } else {
-      return `${baseUrl}/api`;
-    }
+    // Forzar la URL correcta sin depender de variables de entorno
+    return 'https://apwebferrejmg-production.up.railway.app/api';
   }
-  // En desarrollo, asegurar que termine en /api
+  // En desarrollo
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
   if (baseUrl.endsWith('/api')) {
     return baseUrl;
