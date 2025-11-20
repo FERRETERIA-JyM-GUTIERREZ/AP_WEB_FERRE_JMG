@@ -29,12 +29,17 @@ const RoleManagement = () => {
         axios.get('/api/permissions')
       ]);
 
-      setEmployees(employeesRes.data.employees);
-      setRoles(rolesRes.data.roles);
-      setPermissions(permissionsRes.data.permissions);
+      // Validar y establecer datos con valores por defecto
+      setEmployees(employeesRes.data?.employees || employeesRes.data?.data || []);
+      setRoles(rolesRes.data?.roles || rolesRes.data?.data || {});
+      setPermissions(permissionsRes.data?.permissions || permissionsRes.data?.data || {});
     } catch (error) {
       console.error('Error cargando datos:', error);
       toast.error('Error al cargar datos');
+      // Asegurar que siempre haya valores por defecto
+      setEmployees([]);
+      setRoles({});
+      setPermissions({});
     } finally {
       setLoading(false);
     }
@@ -136,7 +141,7 @@ const RoleManagement = () => {
               </tr>
             </thead>
             <tbody className={`divide-y transition-colors ${isDarkMode ? 'bg-slate-800 divide-slate-700' : 'bg-white divide-gray-200'}`}>
-              {employees.map((employee, index) => (
+              {(employees || []).map((employee, index) => (
                 <tr 
                   key={employee.id} 
                   className={`transition-colors duration-200 ${
@@ -286,12 +291,11 @@ const UserEditModal = ({ user, roles, permissions, onClose, onSave }) => {
               onChange={(e) => setFormData(prev => ({ ...prev, rol: e.target.value }))}
               className={`w-full border rounded-lg px-3 py-2 transition-colors ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:ring-2 focus:ring-blue-500' : 'border-gray-300 focus:ring-2 focus:ring-blue-500'}`}
             >
-              {Object.entries(roles)
+              {Object.entries(roles || {})
                 .filter(([key]) => key !== 'cliente') // Solo mostrar roles de empleados
                 .map(([key, value]) => (
                   <option key={key} value={key}>{value}</option>
                 ))}
-              }
             </select>
             <p className={`text-xs mt-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Solo puedes asignar roles de empleado (Administrador o Vendedor)
