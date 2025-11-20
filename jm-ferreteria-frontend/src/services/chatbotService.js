@@ -298,9 +298,12 @@ class ChatbotService {
         };
 
       case 'garantia':
-        const garantiaTexto = datosEmpresa.garantia.incluida.map((item, index) => 
-          `${index + 1}.- ${item}`
-        ).join('<br>');
+        const garantiaIncluida = datosEmpresa?.garantia?.incluida || [];
+        const garantiaTexto = garantiaIncluida.length > 0
+          ? garantiaIncluida.map((item, index) => 
+              `${index + 1}.- ${item}`
+            ).join('<br>')
+          : 'Garantía según fabricante';
         
         return {
           text: `🛡️ <strong>GARANTÍA EN PRODUCTOS</strong><br><br><strong>Garantía incluida en:</strong><br>${garantiaTexto}<br><br><strong>Términos:</strong><br>• Garantía según fabricante<br>• Servicio técnico disponible<br>• Repuestos originales<br>• Soporte post-venta<br><br><strong>¿Necesitas información específica?</strong><br><br>1.- 🛍️ Ver productos con garantía<br>2.- 📞 Servicio técnico<br>3.- 🔧 Repuestos<br><br><strong>Escriba un número:</strong>`,
@@ -308,18 +311,24 @@ class ChatbotService {
         };
 
       case 'pedidos_shalon':
-        const destinosTexto = datosEmpresa.destinosShalon.map((destino, index) => 
-          `${index + 1}.- 🚚 ${destino}`
-        ).join('<br>');
+        const destinosShalon = datosEmpresa?.destinosShalon || [];
+        const destinosTexto = destinosShalon.length > 0 
+          ? destinosShalon.map((destino, index) => 
+              `${index + 1}.- 🚚 ${destino}`
+            ).join('<br>')
+          : 'No hay destinos disponibles en este momento.';
+        
+        const mensajesWhatsApp = datosEmpresa?.mensajesWhatsApp || {};
+        const contacto = datosEmpresa?.contacto || {};
         
         return {
           text: `🚚 <strong>ENTREGAS A NIVEL NACIONAL POR SHALON</strong><br><br><strong>📦 Modalidad de Entrega:</strong><br>• Se realiza la entrega en el terminal de la agencia Shalon de su localidad<br>• El cliente puede recoger su pedido en el terminal<br>• Disponible en todo el Perú<br><br><strong>Destinos disponibles:</strong><br>${destinosTexto}<br><br><strong>¿Qué necesitas?</strong><br><br>1.- 📞 Llamar para consultar<br>2.- 📱 WhatsApp - Pedido Shalon<br>3.- 📱 WhatsApp - Otros transportes<br>4.- 📱 WhatsApp - Cotización envío<br><br><strong>Escriba un número:</strong>`,
           opcionesNumeradas: true,
           acciones: [
-            { tipo: 'llamar', datos: datosEmpresa.contacto.telefono },
-            { tipo: 'whatsapp_mensaje', datos: { numero: datosEmpresa.contacto.whatsapp, mensaje: datosEmpresa.mensajesWhatsApp.pedidoShalon } },
-            { tipo: 'whatsapp_mensaje', datos: { numero: datosEmpresa.contacto.whatsapp, mensaje: datosEmpresa.mensajesWhatsApp.consultaTransporte } },
-            { tipo: 'whatsapp_mensaje', datos: { numero: datosEmpresa.contacto.whatsapp, mensaje: datosEmpresa.mensajesWhatsApp.cotizacionEnvio } }
+            { tipo: 'llamar', datos: contacto.telefono || '' },
+            { tipo: 'whatsapp_mensaje', datos: { numero: contacto.whatsapp || '', mensaje: mensajesWhatsApp.pedidoShalon || 'Hola, me interesa hacer un pedido por Shalon.' } },
+            { tipo: 'whatsapp_mensaje', datos: { numero: contacto.whatsapp || '', mensaje: mensajesWhatsApp.consultaTransporte || 'Hola, necesito información sobre otros medios de transporte.' } },
+            { tipo: 'whatsapp_mensaje', datos: { numero: contacto.whatsapp || '', mensaje: mensajesWhatsApp.cotizacionEnvio || 'Hola, me gustaría una cotización para envío.' } }
           ]
         };
 

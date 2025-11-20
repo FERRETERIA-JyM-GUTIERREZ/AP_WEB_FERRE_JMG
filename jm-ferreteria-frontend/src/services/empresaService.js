@@ -93,6 +93,48 @@ class EmpresaService {
             'Repuestos originales',
             'Soporte post-venta'
           ]
+        },
+        
+        // Destinos Shalon
+        destinosShalon: [
+          'Juliaca Centro',
+          'San Román',
+          'Puno Centro',
+          'Arequipa Centro',
+          'Cusco Centro',
+          'Tacna Centro',
+          'Moquegua Centro',
+          'Abancay Centro',
+          'Ayacucho Centro',
+          'Huancavelica Centro',
+          'Huánuco Centro',
+          'Cerro de Pasco Centro',
+          'Huancayo Centro',
+          'Ica Centro',
+          'Lima Centro',
+          'Callao Centro',
+          'Chiclayo Centro',
+          'Piura Centro',
+          'Tumbes Centro',
+          'Cajamarca Centro',
+          'Chachapoyas Centro',
+          'Moyobamba Centro',
+          'Iquitos Centro',
+          'Pucallpa Centro',
+          'Tarapoto Centro',
+          'Yurimaguas Centro',
+          'Puerto Maldonado Centro',
+          'Andahuaylas Centro',
+          'Espinar Centro',
+          'Sicuani Centro'
+        ],
+        
+        // Mensajes WhatsApp
+        mensajesWhatsApp: {
+          pedidoShalon: 'Hola, me interesa hacer un pedido por Shalon. ¿Podrían ayudarme con la información de envío?',
+          consultaTransporte: 'Hola, necesito información sobre otros medios de transporte para mi pedido. ¿Qué opciones tienen disponibles?',
+          cotizacionEnvio: 'Hola, me gustaría una cotización para envío a mi destino. ¿Podrían ayudarme?',
+          seguimientoPedido: 'Hola, necesito información sobre el seguimiento de mi pedido. ¿Podrían ayudarme?'
         }
       };
 
