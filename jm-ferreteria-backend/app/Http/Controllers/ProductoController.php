@@ -175,6 +175,43 @@ class ProductoController extends Controller
         }
     }
 
+    // Eliminar todos los productos
+    public function deleteAll()
+    {
+        try {
+            $count = Producto::count();
+            
+            if ($count === 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No hay productos para eliminar',
+                    'deleted' => 0
+                ]);
+            }
+
+            $deleted = Producto::query()->delete();
+            
+            \Log::info('🗑️ Todos los productos eliminados', ['count' => $deleted]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Se eliminaron {$deleted} productos exitosamente",
+                'deleted' => $deleted
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('❌ Error al eliminar todos los productos', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar productos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     // Método público para catálogo (sin autenticación)
     public function catalogo()
     {

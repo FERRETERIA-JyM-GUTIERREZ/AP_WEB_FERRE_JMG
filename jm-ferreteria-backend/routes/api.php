@@ -133,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/productos', [ProductoController::class, 'store']);
     Route::put('/productos/{id}', [ProductoController::class, 'update']);
     Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
+    Route::delete('/productos', [ProductoController::class, 'deleteAll']); // Eliminar todos los productos
     Route::post('/productos/upload', [ProductoController::class, 'uploadImage']);
     
     // Categorías - Temporalmente sin middleware de permisos
