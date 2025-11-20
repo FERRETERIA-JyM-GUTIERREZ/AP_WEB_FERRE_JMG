@@ -1,13 +1,16 @@
 import axios from 'axios';
 
-// Configuración de URL de API
+// Configuración de URL de API (debe incluir /api al final)
 const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
-    // En producción, usa la variable de entorno o asume que está en el mismo dominio
-    return process.env.REACT_APP_API_URL || window.location.origin;
+    // En producción, si REACT_APP_API_URL ya incluye /api, usarlo tal cual
+    // Si no, agregar /api
+    const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
+    return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   }
-  // En desarrollo, usa localhost o variable de entorno
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  // En desarrollo, asegurar que termine en /api
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 };
 
 const API_URL = getApiUrl();
@@ -42,7 +45,8 @@ axios.interceptors.response.use(
 export const authService = {
   async login(credentials) {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
+      // La ruta de login en el backend es /login, no /auth/login
+      const response = await axios.post(`${API_URL}/login`, credentials);
       return response;
     } catch (error) {
       console.error('Error en login:', error);
@@ -52,10 +56,10 @@ export const authService = {
 
   async register(userData) {
     try {
-      console.log('🌐 AuthService: Enviando registro a:', `${API_URL}/api/auth/register`);
+      console.log('🌐 AuthService: Enviando registro a:', `${API_URL}/auth/register`);
       console.log('📤 AuthService: Datos enviados:', userData);
       
-      const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+      const response = await axios.post(`${API_URL}/auth/register`, userData);
       console.log('📥 AuthService: Respuesta recibida:', response.data);
       
       return response.data;
@@ -90,7 +94,7 @@ export const authService = {
 
   async logout() {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/logout`);
+      const response = await axios.post(`${API_URL}/logout`);
       return response;
     } catch (error) {
       console.error('Error en logout:', error);
@@ -100,7 +104,7 @@ export const authService = {
 
   async getUser() {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/user`);
+      const response = await axios.get(`${API_URL}/user`);
       return response;
     } catch (error) {
       console.error('Error obteniendo usuario:', error);
@@ -110,7 +114,7 @@ export const authService = {
 
   async updateProfile(profileData) {
     try {
-      const response = await axios.put(`${API_URL}/api/auth/user`, profileData);
+      const response = await axios.put(`${API_URL}/user`, profileData);
       return response;
     } catch (error) {
       console.error('Error actualizando perfil:', error);
@@ -120,7 +124,7 @@ export const authService = {
 
   async getGoogleUrl() {
     try {
-      const response = await axios.get(`${API_URL}/api/auth/google/url`);
+      const response = await axios.get(`${API_URL}/auth/google/url`);
       return response.data;
     } catch (error) {
       console.error('Error obteniendo URL de Google:', error);
@@ -136,7 +140,7 @@ export const authService = {
 
   async handleGoogleCallback(code) {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/google/callback`, { code });
+      const response = await axios.post(`${API_URL}/auth/google/callback`, { code });
       return response.data;
     } catch (error) {
       console.error('Error en callback de Google:', error);
