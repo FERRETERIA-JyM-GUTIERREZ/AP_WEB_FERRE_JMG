@@ -178,14 +178,8 @@ const ChatBot = () => {
         setMessages(prev => [...prev, botMessage]);
         setCurrentState(respuesta.nuevoEstado || nuevoEstado);
         
-        // Ejecutar acciones si las hay
-        if (respuesta.acciones && respuesta.acciones.length > 0) {
-          respuesta.acciones.forEach(accion => {
-            if (accion.tipo && accion.datos) {
-              chatbotService.manejarAccion(accion.tipo, accion.datos);
-            }
-          });
-        }
+        // NO ejecutar acciones automáticamente al mostrar el menú
+        // Las acciones se ejecutarán solo cuando el usuario seleccione una opción específica
       }
 
       setIsTyping(false);
@@ -382,45 +376,45 @@ const ChatBot = () => {
   const manejarMenuEntregas = async (numero) => {
     if (!datosEmpresa) return null;
 
+    // Obtener las acciones del menú de entregas
+    const respuestaShalon = chatbotService.generarRespuesta('pedidos_shalon', datosEmpresa);
+    const acciones = respuestaShalon.acciones || [];
+
     switch (numero) {
-      case 1: // Consultar cobertura / Llamar
-        // Si viene del menú de entregas, llamar directamente
-        if (currentState === 'menu_entregas') {
-          chatbotService.manejarAccion('llamar', datosEmpresa.contacto.telefono);
-        return {
-            text: `📞 <strong>LLAMANDO...</strong><br><br>Abriendo aplicación de teléfono para llamar a:<br><strong>${datosEmpresa.contacto.telefono}</strong><br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📱 WhatsApp<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
-            opcionesNumeradas: true,
-            nuevoEstado: 'menu_contacto'
-          };
+      case 1: // Llamar para consultar
+        if (acciones[0] && acciones[0].tipo === 'llamar') {
+          chatbotService.manejarAccion(acciones[0].tipo, acciones[0].datos);
         }
-        // Si viene del menú de contacto, volver al principal
-        return volverAlMenuPrincipal();
-      
-      case 2: // WhatsApp - Cotización envío
-        const numeroLimpio = datosEmpresa.contacto.whatsapp.replace(/[\s\-\(\)]/g, '');
-        const mensaje = datosEmpresa.mensajesWhatsApp?.cotizacionEnvio || 'Hola, necesito información sobre entregas';
-        chatbotService.manejarAccion('whatsapp_mensaje', { numero: numeroLimpio, mensaje: mensaje });
         return {
-          text: `📱 <strong>ABRIENDO WHATSAPP...</strong><br><br>Abriendo WhatsApp para contactar a:<br><strong>${datosEmpresa.contacto.whatsapp}</strong><br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📞 Llamar<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
+          text: `📞 <strong>LLAMANDO...</strong><br><br>Abriendo aplicación de teléfono para llamar a:<br><strong>${datosEmpresa.contacto.telefono}</strong><br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📱 WhatsApp<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
           opcionesNumeradas: true,
           nuevoEstado: 'menu_contacto'
         };
       
-      case 3: // Ver ubicación / Otros transportes
-        if (currentState === 'menu_entregas') {
-        return {
-            ...chatbotService.generarRespuesta('ubicacion', datosEmpresa),
-            nuevoEstado: 'menu_principal'
-          };
+      case 2: // WhatsApp - Pedido Shalon
+        if (acciones[1] && acciones[1].tipo === 'whatsapp_mensaje') {
+          chatbotService.manejarAccion(acciones[1].tipo, acciones[1].datos);
         }
-        break;
+        return {
+          text: `📱 <strong>ABRIENDO WHATSAPP...</strong><br><br>Abriendo WhatsApp para pedido por Shalon.<br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📞 Llamar<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
+          opcionesNumeradas: true,
+          nuevoEstado: 'menu_contacto'
+        };
       
-      case 4: // Cotización envío
-        const numeroLimpio2 = datosEmpresa.contacto.whatsapp.replace(/[\s\-\(\)]/g, '');
-        chatbotService.manejarAccion('whatsapp_mensaje', { 
-          numero: numeroLimpio2, 
-          mensaje: datosEmpresa.mensajesWhatsApp?.cotizacionEnvio || 'Hola, me gustaría una cotización para envío' 
-        });
+      case 3: // WhatsApp - Otros transportes
+        if (acciones[2] && acciones[2].tipo === 'whatsapp_mensaje') {
+          chatbotService.manejarAccion(acciones[2].tipo, acciones[2].datos);
+        }
+        return {
+          text: `📱 <strong>ABRIENDO WHATSAPP...</strong><br><br>Abriendo WhatsApp para consultar otros transportes.<br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📞 Llamar<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
+          opcionesNumeradas: true,
+          nuevoEstado: 'menu_contacto'
+        };
+      
+      case 4: // WhatsApp - Cotización envío
+        if (acciones[3] && acciones[3].tipo === 'whatsapp_mensaje') {
+          chatbotService.manejarAccion(acciones[3].tipo, acciones[3].datos);
+        }
         return {
           text: `📱 <strong>ABRIENDO WHATSAPP...</strong><br><br>Abriendo WhatsApp para cotización de envío.<br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📞 Llamar<br><br><strong>Escriba un número:</strong>`,
           opcionesNumeradas: true,
@@ -436,8 +430,6 @@ const ChatBot = () => {
           nuevoEstado: 'menu_entregas'
         };
     }
-
-    return null;
   };
 
   // Manejar menú de garantía
