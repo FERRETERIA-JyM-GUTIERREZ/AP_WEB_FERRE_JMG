@@ -1,32 +1,31 @@
 // Servicio para manejar productos en el chatbot
 const getApiBaseUrl = () => {
+  let baseUrl;
+  
   if (process.env.NODE_ENV === 'production') {
-    const baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
-    // Si ya termina en /api, no añadir otro /api
-    if (baseUrl.endsWith('/api')) {
-      return baseUrl;
-    }
-    // Si termina en /api/, quitar la barra final y devolver
-    if (baseUrl.endsWith('/api/')) {
-      return baseUrl.slice(0, -1);
-    }
-    // Si no tiene /api, añadirlo
-    return `${baseUrl}/api`;
+    baseUrl = process.env.REACT_APP_API_URL || window.location.origin;
+  } else {
+    baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
   }
-  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-  // Si ya termina en /api, no añadir otro /api
+  
+  // Normalizar: quitar barra final si existe
+  baseUrl = baseUrl.replace(/\/$/, '');
+  
+  // Si ya termina en /api, devolver tal cual (sin añadir otro /api)
   if (baseUrl.endsWith('/api')) {
+    console.log('🔧 API_BASE_URL (ya tiene /api):', baseUrl);
     return baseUrl;
   }
-  // Si termina en /api/, quitar la barra final y devolver
-  if (baseUrl.endsWith('/api/')) {
-    return baseUrl.slice(0, -1);
-  }
+  
   // Si no tiene /api, añadirlo
-  return `${baseUrl}/api`;
+  const finalUrl = `${baseUrl}/api`;
+  console.log('🔧 API_BASE_URL (añadido /api):', finalUrl);
+  return finalUrl;
 };
 
 const API_BASE_URL = getApiBaseUrl();
+console.log('🔧 API_BASE_URL final:', API_BASE_URL);
+console.log('🔧 REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
 class ProductService {
   // Buscar productos
