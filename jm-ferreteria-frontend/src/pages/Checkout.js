@@ -215,8 +215,8 @@ const Checkout = () => {
       const mensaje = generarMensajeWhatsApp({ id: pedidoId || 'PENDIENTE' }, ventaData);
       console.log('💬 Mensaje de WhatsApp generado:', mensaje);
       
-      const urlWhatsApp = `https://wa.me/51960604850?text=${encodeURIComponent(mensaje)}`;
-      console.log('🔗 URL de WhatsApp:', urlWhatsApp);
+      // Usar función helper para crear URL de forma segura
+      const urlWhatsApp = crearUrlWhatsApp(mensaje);
       
       // Limpiar carrito del frontend
       clearCart();
@@ -232,22 +232,32 @@ const Checkout = () => {
       
       // Intentar abrir WhatsApp de múltiples formas para asegurar que funcione
       try {
+        // Verificar que la URL sea válida y use https://
+        if (!urlWhatsApp.startsWith('https://wa.me/')) {
+          console.error('❌ URL de WhatsApp inválida:', urlWhatsApp);
+          toast.error('Error al generar la URL de WhatsApp. Por favor, intenta de nuevo.');
+          setCheckoutLoading(false);
+          return;
+        }
+        
+        // Intentar abrir en nueva pestaña
         const whatsappWindow = window.open(urlWhatsApp, '_blank', 'noopener,noreferrer');
         
-        // Si window.open falla (bloqueado por el navegador), usar location.href como fallback
+        // Si window.open falla (bloqueado por el navegador), usar location.replace como fallback
         if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
           console.warn('⚠️ window.open fue bloqueado, usando fallback...');
           // Esperar un momento antes de redirigir para que el usuario vea el mensaje
           setTimeout(() => {
-            window.location.href = urlWhatsApp;
+            // Usar replace en lugar de href para evitar que el navegador use protocolos nativos
+            window.location.replace(urlWhatsApp);
           }, 500);
         } else {
           console.log('✅ WhatsApp abierto correctamente');
         }
       } catch (error) {
         console.error('❌ Error al abrir WhatsApp:', error);
-        // Fallback: redirigir directamente
-        window.location.href = urlWhatsApp;
+        // Fallback: redirigir directamente usando replace
+        window.location.replace(urlWhatsApp);
       }
       
       // Redirigir a mis compras después de un delay
@@ -278,19 +288,27 @@ ${cart.map((item, index) => {
 
 Por favor, confirma disponibilidad y costo de envío.`;
       
-      const urlWhatsApp = `https://wa.me/51960604850?text=${encodeURIComponent(mensajeBasico)}`;
+      // Usar función helper para crear URL de forma segura
+      const urlWhatsApp = crearUrlWhatsApp(mensajeBasico);
+      
+      // Verificar que la URL sea válida
+      if (!urlWhatsApp.startsWith('https://wa.me/')) {
+        console.error('❌ URL de WhatsApp inválida:', urlWhatsApp);
+        toast.error('Error al generar la URL de WhatsApp. Por favor, intenta de nuevo.');
+        return;
+      }
       
       // Intentar abrir WhatsApp con fallback
       try {
         const whatsappWindow = window.open(urlWhatsApp, '_blank', 'noopener,noreferrer');
         if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
           setTimeout(() => {
-            window.location.href = urlWhatsApp;
+            window.location.replace(urlWhatsApp);
           }, 500);
         }
       } catch (error) {
         console.error('❌ Error al abrir WhatsApp:', error);
-        window.location.href = urlWhatsApp;
+        window.location.replace(urlWhatsApp);
       }
       
       toast.error('Hubo un error, pero se abrió WhatsApp. Por favor, completa tu pedido allí.', {
@@ -300,6 +318,38 @@ Por favor, confirma disponibilidad y costo de envío.`;
     } finally {
       setCheckoutLoading(false);
     }
+  };
+
+  // Función helper para crear URL de WhatsApp de forma segura
+  const crearUrlWhatsApp = (mensaje) => {
+    // Limpiar el mensaje de caracteres problemáticos y codificarlo correctamente
+    let mensajeLimpio = mensaje
+      .replace(/\uFFFD/g, '') // Eliminar caracteres de reemplazo UTF-8
+      .replace(/\u200B/g, '') // Eliminar espacios de ancho cero
+      .replace(/[\u0000-\u001F]/g, '') // Eliminar caracteres de control
+      .trim();
+    
+    // Asegurarse de que el mensaje no esté vacío
+    if (!mensajeLimpio) {
+      mensajeLimpio = 'Hola, me interesa hacer una compra.';
+    }
+    
+    // Codificar el mensaje de forma segura
+    let mensajeCodificado;
+    try {
+      mensajeCodificado = encodeURIComponent(mensajeLimpio);
+    } catch (error) {
+      console.error('❌ Error al codificar mensaje:', error);
+      // Si falla, usar un mensaje simple
+      mensajeCodificado = encodeURIComponent('Hola, me interesa hacer una compra.');
+    }
+    
+    // SIEMPRE usar https://wa.me/ (nunca whatsapp://)
+    // Forzar https para evitar que el navegador use protocolos nativos
+    const url = `https://wa.me/51960604850?text=${mensajeCodificado}`;
+    
+    console.log('🔗 URL de WhatsApp generada:', url.substring(0, 100) + '...');
+    return url;
   };
 
   const generarMensajeWhatsApp = (venta, ventaData) => {
