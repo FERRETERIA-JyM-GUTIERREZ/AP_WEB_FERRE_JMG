@@ -3,18 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../services/api';
+import api from '../services/api';
 import toast from 'react-hot-toast';
-import axios from 'axios';
-
-// Configuración de URL de API
-const getApiUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.REACT_APP_API_URL || window.location.origin;
-  }
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
-};
-
-const API_URL = getApiUrl();
 
 const Checkout = () => {
   const [loading, setLoading] = useState(true);
@@ -49,7 +39,7 @@ const Checkout = () => {
 
   const fetchDestinos = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/envios/destinos`);
+      const response = await api.get('/envios/destinos');
       setDestinos(response.data.data);
       if (response.data.data.length > 0) {
         setDestinoSeleccionado(response.data.data[0].id);
