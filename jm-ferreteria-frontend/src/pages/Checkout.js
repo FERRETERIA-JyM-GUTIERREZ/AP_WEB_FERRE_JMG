@@ -222,13 +222,35 @@ const Checkout = () => {
       clearCart();
       console.log('🗑️ Carrito limpiado');
 
-      toast.success('¡Redirigiendo a WhatsApp para completar tu compra...');
+      toast.success('¡Redirigiendo a WhatsApp para completar tu compra...', {
+        duration: 3000,
+        position: 'top-center',
+      });
       
       // Abrir WhatsApp (siempre, incluso si falló la creación del pedido)
       console.log('🚀 Abriendo WhatsApp...');
-      window.open(urlWhatsApp, '_blank');
       
-      // Redirigir a mis compras
+      // Intentar abrir WhatsApp de múltiples formas para asegurar que funcione
+      try {
+        const whatsappWindow = window.open(urlWhatsApp, '_blank', 'noopener,noreferrer');
+        
+        // Si window.open falla (bloqueado por el navegador), usar location.href como fallback
+        if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+          console.warn('⚠️ window.open fue bloqueado, usando fallback...');
+          // Esperar un momento antes de redirigir para que el usuario vea el mensaje
+          setTimeout(() => {
+            window.location.href = urlWhatsApp;
+          }, 500);
+        } else {
+          console.log('✅ WhatsApp abierto correctamente');
+        }
+      } catch (error) {
+        console.error('❌ Error al abrir WhatsApp:', error);
+        // Fallback: redirigir directamente
+        window.location.href = urlWhatsApp;
+      }
+      
+      // Redirigir a mis compras después de un delay
       setTimeout(() => {
         console.log('🔄 Redirigiendo a mis compras...');
         navigate('/mis-compras');
@@ -243,7 +265,7 @@ const Checkout = () => {
 👤 *DATOS DEL CLIENTE:*
 • *Nombre:* ${datosEnvio.nombre}
 • *Teléfono:* ${datosEnvio.telefono}
-${datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
+${datosEnvio.dni && datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
 • *Ciudad:* ${datosEnvio.ciudad}
 
 🛍️ *PRODUCTOS SOLICITADOS:*
@@ -257,9 +279,24 @@ ${cart.map((item, index) => {
 Por favor, confirma disponibilidad y costo de envío.`;
       
       const urlWhatsApp = `https://wa.me/51960604850?text=${encodeURIComponent(mensajeBasico)}`;
-      window.open(urlWhatsApp, '_blank');
       
-      toast.error('Hubo un error, pero se abrió WhatsApp. Por favor, completa tu pedido allí.');
+      // Intentar abrir WhatsApp con fallback
+      try {
+        const whatsappWindow = window.open(urlWhatsApp, '_blank', 'noopener,noreferrer');
+        if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed === 'undefined') {
+          setTimeout(() => {
+            window.location.href = urlWhatsApp;
+          }, 500);
+        }
+      } catch (error) {
+        console.error('❌ Error al abrir WhatsApp:', error);
+        window.location.href = urlWhatsApp;
+      }
+      
+      toast.error('Hubo un error, pero se abrió WhatsApp. Por favor, completa tu pedido allí.', {
+        duration: 5000,
+        position: 'top-center',
+      });
     } finally {
       setCheckoutLoading(false);
     }
@@ -288,7 +325,7 @@ Por favor, confirma disponibilidad y costo de envío.`;
 👤 *DATOS DEL CLIENTE:*
 • *Nombre:* ${datosEnvio.nombre}
 • *Teléfono:* ${datosEnvio.telefono}
-${datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
+${datosEnvio.dni && datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
 • *Ciudad:* ${datosEnvio.ciudad}
 
 📍 *DATOS DE ENVÍO:*
