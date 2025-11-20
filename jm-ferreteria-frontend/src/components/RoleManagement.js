@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const RoleManagement = () => {
@@ -24,9 +24,9 @@ const RoleManagement = () => {
     try {
       setLoading(true);
       const [employeesRes, rolesRes, permissionsRes] = await Promise.all([
-        axios.get('/api/employees'),
-        axios.get('/api/roles'),
-        axios.get('/api/permissions')
+        api.get('/employees'),
+        api.get('/roles'),
+        api.get('/permissions')
       ]);
 
       // Validar y establecer datos con valores por defecto
@@ -35,6 +35,12 @@ const RoleManagement = () => {
       setPermissions(permissionsRes.data?.permissions || permissionsRes.data?.data || {});
     } catch (error) {
       console.error('Error cargando datos:', error);
+      console.error('Detalles del error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url
+      });
       toast.error('Error al cargar datos');
       // Asegurar que siempre haya valores por defecto
       setEmployees([]);
@@ -52,7 +58,7 @@ const RoleManagement = () => {
 
   const handleUpdateUser = async (formData) => {
     try {
-      await axios.put(`/api/users/${selectedUser.id}/permissions`, formData);
+      await api.put(`/users/${selectedUser.id}/permissions`, formData);
       toast.success('Usuario actualizado correctamente');
       setShowModal(false);
       loadData();
