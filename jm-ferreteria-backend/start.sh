@@ -38,6 +38,10 @@ cd jm-ferreteria-backend || cd .
 echo "Ejecutando migraciones..."
 php artisan migrate --force || echo "Advertencia: Error en migraciones"
 
+# Ejecutar seeder para crear usuarios iniciales (solo si no existen)
+echo "Verificando usuarios iniciales..."
+php artisan db:seed --class=DatabaseSeeder --force || echo "Advertencia: Error en seeder (puede ser normal si ya existen usuarios)"
+
 # Iniciar servidor
 echo "Iniciando servidor PHP..."
 php -S 0.0.0.0:${PORT:-8000} -t public
