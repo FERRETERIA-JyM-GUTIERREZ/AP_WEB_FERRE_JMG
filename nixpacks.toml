@@ -1,3 +1,7 @@
+[providers]
+php = true
+node = false
+
 [phases.setup]
 nixPkgs = ["php82", "composer"]
 
