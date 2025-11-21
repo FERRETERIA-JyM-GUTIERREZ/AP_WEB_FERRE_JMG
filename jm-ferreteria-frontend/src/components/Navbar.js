@@ -514,38 +514,38 @@ const Navbar = () => {
       
       {/* Sidebar para usuarios autenticados */}
       {isAuthenticated() && (
-        <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-slate-700/50 flex flex-col ${
+        <div className={`fixed inset-y-0 left-0 z-50 w-56 sm:w-64 md:w-72 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 transform transition-transform duration-300 ease-in-out shadow-2xl border-r border-slate-700/50 flex flex-col ${
           isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 lg:fixed lg:inset-y-0 lg:left-0`}>
           {/* Header del sidebar */}
-          <div className="flex items-center justify-between h-20 px-4 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 shadow-xl border-b border-slate-600/50">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-3 shadow-lg border-2 border-orange-400/50">
-                <span className="text-white font-bold text-sm">J&M</span>
+          <div className="flex items-center justify-between h-16 sm:h-20 px-3 sm:px-4 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 shadow-xl border-b border-slate-600/50">
+            <div className="flex items-center flex-1 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center mr-2 sm:mr-3 shadow-lg border-2 border-orange-400/50 flex-shrink-0">
+                <span className="text-white font-bold text-xs sm:text-sm">J&M</span>
               </div>
-              <div>
-                <h1 className="text-white font-bold text-sm tracking-tight leading-tight">Gestión Ferretera</h1>
-                <p className="text-xs text-orange-400 font-semibold">J&M GUTIÉRREZ</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-white font-bold text-xs sm:text-sm tracking-tight leading-tight truncate">Gestión Ferretera</h1>
+                <p className="text-[10px] sm:text-xs text-orange-400 font-semibold truncate">J&M GUTIÉRREZ</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {/* Botón de cambio de tema */}
               <button
                 onClick={toggleTheme}
-                className="text-gray-300 hover:text-white hover:bg-slate-600/50 rounded-lg p-2 transition-all duration-200"
+                className="text-gray-300 hover:text-white hover:bg-slate-600/50 rounded-lg p-1.5 sm:p-2 transition-all duration-200"
                 title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
                 {isDarkMode ? (
-                  <FaSun className="w-5 h-5" />
+                  <FaSun className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <FaMoon className="w-5 h-5" />
+                  <FaMoon className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-gray-300 hover:text-white hover:bg-slate-600/50 rounded-lg p-2 transition-all duration-200 lg:hidden"
+                className="text-gray-300 hover:text-white hover:bg-slate-600/50 rounded-lg p-1.5 sm:p-2 transition-all duration-200 lg:hidden"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -553,115 +553,115 @@ const Navbar = () => {
           </div>
           
           {/* Menú de navegación */}
-          <nav className="mt-6 px-3 overflow-y-auto flex-1">
+          <nav className="mt-4 sm:mt-6 px-2 sm:px-3 overflow-y-auto flex-1">
             {/* Menú administrativo */}
-            <div className="mb-6">
-              <p className="text-xs text-orange-400 uppercase tracking-wider mb-4 px-3 font-bold flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-[10px] sm:text-xs text-orange-400 uppercase tracking-wider mb-3 sm:mb-4 px-2 sm:px-3 font-bold flex items-center gap-1.5 sm:gap-2">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                Administración
+                <span className="truncate">Administración</span>
               </p>
-              <div className="space-y-2">
-                <Link to="/dashboard" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-blue-500/20 hover:shadow-lg hover:shadow-blue-500/20 border border-transparent hover:border-blue-500/30">
-                  <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-blue-500/20 hover:shadow-lg hover:shadow-blue-500/20 border border-transparent hover:border-blue-500/30">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
                     </svg>
                   </div>
-                  <span className="font-semibold">Dashboard</span>
+                  <span className="font-semibold text-sm sm:text-base truncate">Dashboard</span>
                 </Link>
                 {hasPermission('inventario.view') && (
-                  <Link to="/inventario" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-green-500/20 hover:shadow-lg hover:shadow-green-500/20 border border-transparent hover:border-green-500/30">
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <Link to="/inventario" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-green-600/20 hover:to-green-500/20 hover:shadow-lg hover:shadow-green-500/20 border border-transparent hover:border-green-500/30">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
                     </div>
-                    <span className="font-semibold">Inventario</span>
+                    <span className="font-semibold text-sm sm:text-base truncate">Inventario</span>
                   </Link>
                 )}
                 {hasPermission('ventas.view') && (
-                  <Link to="/ventas" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-emerald-600/20 hover:to-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/20 border border-transparent hover:border-emerald-500/30">
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <Link to="/ventas" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-emerald-600/20 hover:to-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/20 border border-transparent hover:border-emerald-500/30">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                       </svg>
                     </div>
-                    <span className="font-semibold">Ventas</span>
+                    <span className="font-semibold text-sm sm:text-base truncate">Ventas</span>
                   </Link>
                 )}
                 {hasPermission('usuarios.view') && (
-                  <Link to="/usuarios" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-purple-500/20 hover:shadow-lg hover:shadow-purple-500/20 border border-transparent hover:border-purple-500/30">
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <Link to="/usuarios" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-purple-500/20 hover:shadow-lg hover:shadow-purple-500/20 border border-transparent hover:border-purple-500/30">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                       </svg>
                     </div>
-                    <span className="font-semibold">Usuarios</span>
+                    <span className="font-semibold text-sm sm:text-base truncate">Usuarios</span>
                   </Link>
                 )}
                 {hasPermission('reportes.view') && (
-                  <Link to="/reportes" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-cyan-600/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/20 border border-transparent hover:border-cyan-500/30">
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <Link to="/reportes" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-cyan-600/20 hover:to-cyan-500/20 hover:shadow-lg hover:shadow-cyan-500/20 border border-transparent hover:border-cyan-500/30">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <span className="font-semibold">Reportes</span>
+                    <span className="font-semibold text-sm sm:text-base truncate">Reportes</span>
                   </Link>
                 )}
-                <Link to="/gestion-roles" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-amber-600/20 hover:to-amber-500/20 hover:shadow-lg hover:shadow-amber-500/20 border border-transparent hover:border-amber-500/30">
-                  <div className="w-6 h-6 rounded-md bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Link to="/gestion-roles" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-amber-600/20 hover:to-amber-500/20 hover:shadow-lg hover:shadow-amber-500/20 border border-transparent hover:border-amber-500/30">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  <span className="font-semibold">Gestión de Roles</span>
+                  <span className="font-semibold text-sm sm:text-base truncate">Gestión de Roles</span>
                 </Link>
               </div>
             </div>
 
             {/* Sección de Herramientas */}
-            <div className="mb-6">
-              <p className="text-xs text-cyan-400 uppercase tracking-wider mb-4 px-3 font-bold flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-[10px] sm:text-xs text-cyan-400 uppercase tracking-wider mb-3 sm:mb-4 px-2 sm:px-3 font-bold flex items-center gap-1.5 sm:gap-2">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Herramientas
+                <span className="truncate">Herramientas</span>
               </p>
-              <div className="space-y-2">
-                <Link to="/calendario" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-pink-600/20 hover:to-pink-500/20 hover:shadow-lg hover:shadow-pink-500/20 border border-transparent hover:border-pink-500/30">
-                  <div className="w-6 h-6 rounded-md bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Link to="/calendario" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-pink-600/20 hover:to-pink-500/20 hover:shadow-lg hover:shadow-pink-500/20 border border-transparent hover:border-pink-500/30">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <span className="font-semibold">Calendario</span>
+                  <span className="font-semibold text-sm sm:text-base truncate">Calendario</span>
                 </Link>
-                <Link to="/notas" className="group flex items-center px-4 py-3 text-gray-300 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-600/20 hover:to-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/20 border border-transparent hover:border-indigo-500/30">
-                  <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mr-1.5 shadow-sm group-hover:scale-110 transition-transform">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <Link to="/notas" onClick={() => setIsMobileMenuOpen(false)} className="group flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-300 hover:text-white rounded-lg sm:rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-indigo-600/20 hover:to-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/20 border border-transparent hover:border-indigo-500/30">
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mr-2 sm:mr-1.5 shadow-sm group-hover:scale-110 transition-transform flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <span className="font-semibold">Notas</span>
+                  <span className="font-semibold text-sm sm:text-base truncate">Notas</span>
                 </Link>
               </div>
             </div>
           </nav>
 
           {/* Información del usuario */}
-          <div className="px-3 py-4 border-t border-slate-700/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 backdrop-blur-sm mt-auto">
-            <div className="flex items-center mb-4 px-2">
+          <div className="px-2 sm:px-3 py-3 sm:py-4 border-t border-slate-700/50 bg-gradient-to-b from-slate-800/50 to-slate-900/50 backdrop-blur-sm mt-auto">
+            <div className="flex items-center mb-3 sm:mb-4 px-1 sm:px-2">
               {/* Foto de perfil móvil */}
               {user?.avatar && user.avatar.trim() !== '' ? (
                 <img 
                   key={user.avatar} // Forzar re-render si cambia el avatar
                   src={user.avatar.replace(/=s\d+-c$/, '=s200-c')} 
                   alt={user?.name || 'Avatar'} 
-                  className="w-12 h-12 rounded-xl border-2 border-orange-500/50 mr-3 shadow-lg object-cover"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl border-2 border-orange-500/50 mr-2 sm:mr-3 shadow-lg object-cover flex-shrink-0"
                   referrerPolicy="no-referrer"
                   loading="lazy"
                   onError={(e) => {
@@ -688,36 +688,36 @@ const Navbar = () => {
                 />
               ) : null}
               <div 
-                className={`w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-3 shadow-lg border border-orange-400/30 ${user?.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center mr-2 sm:mr-3 shadow-lg border border-orange-400/30 flex-shrink-0 ${user?.avatar && user.avatar.trim() !== '' ? 'hidden' : 'flex'}`}
               >
-                <span className="text-white font-bold text-lg">
+                <span className="text-white font-bold text-base sm:text-lg">
                   {user?.name?.charAt(0)?.toUpperCase()}
                 </span>
               </div>
-              <div>
-                <p className="text-sm font-bold text-white">{user?.name}</p>
-                <p className="text-xs text-orange-400 capitalize font-semibold">{user?.rol}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-bold text-white truncate">{user?.name}</p>
+                <p className="text-[10px] sm:text-xs text-orange-400 capitalize font-semibold truncate">{user?.rol}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="w-full flex items-center justify-center px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 border border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full flex items-center justify-center px-2 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold text-white bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 border border-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoggingOut ? (
                 <>
-                  <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Cerrando...
+                  <span className="truncate">Cerrando...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  Cerrar Sesión
+                  <span className="truncate">Cerrar Sesión</span>
                 </>
               )}
             </button>
@@ -729,9 +729,9 @@ const Navbar = () => {
       {isAuthenticated() && (
         <button
           onClick={() => setIsMobileMenuOpen(true)}
-          className="fixed top-4 left-4 z-30 lg:hidden bg-gradient-to-r from-orange-600 to-orange-500 text-white p-3 rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 border border-orange-400/30"
+          className="fixed top-3 sm:top-4 left-3 sm:left-4 z-30 lg:hidden bg-gradient-to-r from-orange-600 to-orange-500 text-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 border border-orange-400/30"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>

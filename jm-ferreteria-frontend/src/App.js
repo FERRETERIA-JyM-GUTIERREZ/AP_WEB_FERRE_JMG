@@ -74,6 +74,7 @@ function App() {
                 }}
               />
               <Navbar />
+              <div className="lg:ml-64 xl:ml-72 transition-all duration-300">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/catalogo" element={<Catalogo />} />
@@ -161,6 +162,7 @@ function App() {
                     </PrivateRoute>
                   } />
                 </Routes>
+              </div>
               <Footer />
               <ArbolNavidad />
               <FloatingContactButtons />
