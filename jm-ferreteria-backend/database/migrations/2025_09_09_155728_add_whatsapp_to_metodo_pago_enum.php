@@ -12,8 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Modificar la columna metodo_pago para incluir 'whatsapp'
-        DB::statement("ALTER TABLE ventas MODIFY COLUMN metodo_pago ENUM('efectivo', 'tarjeta', 'transferencia', 'yape', 'whatsapp') DEFAULT 'efectivo'");
+        // Compatible con MySQL y PostgreSQL
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE ventas MODIFY COLUMN metodo_pago ENUM('efectivo', 'tarjeta', 'transferencia', 'yape', 'whatsapp') DEFAULT 'efectivo'");
+        } else {
+            // PostgreSQL: usar CHECK constraint
+            DB::statement("ALTER TABLE ventas DROP CONSTRAINT IF EXISTS ventas_metodo_pago_check");
+            DB::statement("ALTER TABLE ventas ADD CONSTRAINT ventas_metodo_pago_check CHECK (metodo_pago IN ('efectivo', 'tarjeta', 'transferencia', 'yape', 'whatsapp'))");
+            DB::statement("ALTER TABLE ventas ALTER COLUMN metodo_pago SET DEFAULT 'efectivo'");
+        }
     }
 
     /**
@@ -21,7 +28,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revertir a los valores originales
-        DB::statement("ALTER TABLE ventas MODIFY COLUMN metodo_pago ENUM('efectivo', 'tarjeta', 'transferencia', 'yape') DEFAULT 'efectivo'");
+        // Compatible con MySQL y PostgreSQL
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE ventas MODIFY COLUMN metodo_pago ENUM('efectivo', 'tarjeta', 'transferencia', 'yape') DEFAULT 'efectivo'");
+        } else {
+            // PostgreSQL: revertir CHECK constraint
+            DB::statement("ALTER TABLE ventas DROP CONSTRAINT IF EXISTS ventas_metodo_pago_check");
+            DB::statement("ALTER TABLE ventas ADD CONSTRAINT ventas_metodo_pago_check CHECK (metodo_pago IN ('efectivo', 'tarjeta', 'transferencia', 'yape'))");
+            DB::statement("ALTER TABLE ventas ALTER COLUMN metodo_pago SET DEFAULT 'efectivo'");
+        }
     }
 };

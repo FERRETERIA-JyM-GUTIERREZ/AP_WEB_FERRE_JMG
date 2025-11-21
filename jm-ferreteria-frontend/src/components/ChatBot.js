@@ -386,10 +386,10 @@ const ChatBot = () => {
           chatbotService.manejarAccion(acciones[0].tipo, acciones[0].datos);
         }
         return {
-          text: `📞 <strong>LLAMANDO...</strong><br><br>Abriendo aplicación de teléfono para llamar a:<br><strong>${datosEmpresa.contacto.telefono}</strong><br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📱 WhatsApp<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
-          opcionesNumeradas: true,
-          nuevoEstado: 'menu_contacto'
-        };
+            text: `📞 <strong>LLAMANDO...</strong><br><br>Abriendo aplicación de teléfono para llamar a:<br><strong>${datosEmpresa.contacto.telefono}</strong><br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📱 WhatsApp<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
+            opcionesNumeradas: true,
+            nuevoEstado: 'menu_contacto'
+          };
       
       case 2: // WhatsApp - Pedido Shalon
         if (acciones[1] && acciones[1].tipo === 'whatsapp_mensaje') {
@@ -409,7 +409,7 @@ const ChatBot = () => {
           text: `📱 <strong>ABRIENDO WHATSAPP...</strong><br><br>Abriendo WhatsApp para consultar otros transportes.<br><br><strong>Opciones:</strong><br><br>1.- 🏠 Volver al menú principal<br>2.- 📞 Llamar<br>3.- ✉️ Email<br><br><strong>Escriba un número:</strong>`,
           opcionesNumeradas: true,
           nuevoEstado: 'menu_contacto'
-        };
+          };
       
       case 4: // WhatsApp - Cotización envío
         if (acciones[3] && acciones[3].tipo === 'whatsapp_mensaje') {

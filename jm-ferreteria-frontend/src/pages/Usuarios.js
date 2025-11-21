@@ -39,17 +39,17 @@ const Usuarios = () => {
     } else {
       // Si no hay usuario en localStorage, pedirlo a la API
       api.get('/user')
-        .then(res => {
-          if (res.data && res.data.user) {
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-            setUserName(res.data.user.name || '');
-            setUserRol(res.data.user.rol || '');
-          }
-        })
-        .catch(() => {
-          setUserName('');
-          setUserRol('');
-        });
+          .then(res => {
+            if (res.data && res.data.user) {
+              localStorage.setItem('user', JSON.stringify(res.data.user));
+              setUserName(res.data.user.name || '');
+              setUserRol(res.data.user.rol || '');
+            }
+          })
+          .catch(() => {
+            setUserName('');
+            setUserRol('');
+          });
     }
   }, []);
 
