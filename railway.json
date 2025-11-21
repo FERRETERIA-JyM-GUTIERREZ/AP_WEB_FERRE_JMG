@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "cd jm-ferreteria-backend && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public",
+    "startCommand": "chmod +x jm-ferreteria-backend/start.sh && bash jm-ferreteria-backend/start.sh",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
