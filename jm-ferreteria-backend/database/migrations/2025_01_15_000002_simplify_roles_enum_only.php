@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Para PostgreSQL: cambiar constraint CHECK
+        \DB::statement("ALTER TABLE users DROP CONSTRAINT IF EXISTS check_rol");
+        \DB::statement("ALTER TABLE users ADD CONSTRAINT check_rol CHECK (rol IN ('admin', 'vendedor', 'cliente'))");
+        
         Schema::table('users', function (Blueprint $table) {
-            // Solo cambiar el enum de roles a la versión simplificada
-            $table->enum('rol', ['admin', 'vendedor', 'cliente'])->default('cliente')->change();
+            $table->string('rol')->default('cliente')->notNull()->change();
         });
     }
 
@@ -22,16 +25,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Para PostgreSQL: revertir constraint CHECK
+        \DB::statement("ALTER TABLE users DROP CONSTRAINT IF EXISTS check_rol");
+        \DB::statement("ALTER TABLE users ADD CONSTRAINT check_rol CHECK (rol IN ('admin', 'gerente', 'vendedor', 'cajero', 'almacenero', 'supervisor', 'cliente'))");
+        
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('rol', [
-                'admin', 
-                'gerente', 
-                'vendedor', 
-                'cajero', 
-                'almacenero', 
-                'supervisor', 
-                'cliente'
-            ])->default('cliente')->change();
+            $table->string('rol')->default('cliente')->change();
         });
     }
 };
