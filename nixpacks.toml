@@ -1,5 +1,10 @@
 [phases.setup]
-nixPkgs = ["php82", "composer"]
+nixPkgs = ["php82"]
+cmds = [
+  "curl -sS https://getcomposer.org/installer | php",
+  "mv composer.phar /usr/local/bin/composer",
+  "chmod +x /usr/local/bin/composer"
+]
 
 [phases.install]
 cmds = ["cd jm-ferreteria-backend && composer install --no-dev --optimize-autoloader"]
