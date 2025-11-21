@@ -3,8 +3,7 @@ nixPkgs = ["php82"]
 
 [phases.install]
 cmds = [
-  "cd jm-ferreteria-backend && curl -sS https://getcomposer.org/installer | php",
-  "cd jm-ferreteria-backend && php composer.phar install --no-dev --optimize-autoloader"
+  "cd jm-ferreteria-backend && curl -sS https://getcomposer.org/installer | php && php composer.phar install --no-dev --optimize-autoloader"
 ]
 
 [phases.build]
