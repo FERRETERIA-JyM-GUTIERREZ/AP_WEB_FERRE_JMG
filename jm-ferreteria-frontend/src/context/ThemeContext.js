@@ -117,6 +117,12 @@ export const ThemeProvider = ({ children }) => {
   const value = {
     isDarkMode,
     toggleTheme,
+    setIsDarkMode: (value) => {
+      setIsDarkMode(value);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('theme', value ? 'dark' : 'light');
+      }
+    },
   };
 
   return (

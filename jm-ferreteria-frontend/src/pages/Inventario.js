@@ -28,7 +28,21 @@ const Inventario = () => {
   const [imagenPreview, setImagenPreview] = useState(null);
   const navigate = useNavigate();
   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, setIsDarkMode } = useTheme();
+
+  // Forzar modo oscuro por defecto en gestión de inventario
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('inventario_theme');
+    if (savedTheme === null) {
+      // Si no hay preferencia guardada para inventario, usar modo oscuro por defecto
+      setIsDarkMode(true);
+      localStorage.setItem('inventario_theme', 'dark');
+    } else if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    } else {
+      setIsDarkMode(false);
+    }
+  }, [setIsDarkMode]);
 
   // Validar acceso con sistema de permisos
   useEffect(() => {
@@ -410,46 +424,48 @@ const Inventario = () => {
   }
 
   return (
-    <div className={`min-h-screen py-8 transition-colors duration-300 ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen py-4 sm:py-6 lg:py-8 transition-colors duration-300 ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
         
         {/* Información de roles y permisos */}
         <RolePermissionInfo />
         
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <h1 className={`text-3xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Inventario de Productos</h1>
-            <p className={`mt-2 transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Administra el inventario de tu ferretería</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 lg:mb-8 gap-3 sm:gap-4">
+          <div className="w-full sm:w-auto">
+            <h1 className={`text-2xl sm:text-3xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Inventario de Productos</h1>
+            <p className={`mt-1 sm:mt-2 text-sm sm:text-base transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Administra el inventario de tu ferretería</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {hasPermission('inventario.create') && (
-              <button onClick={() => openModal()} className="px-6 py-2 rounded-md transition-colors flex items-center gap-2 font-semibold shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <button onClick={() => openModal()} className="w-full sm:w-auto px-4 sm:px-6 py-2 rounded-md transition-colors flex items-center justify-center gap-2 font-semibold shadow-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm sm:text-base">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                Agregar Producto
+                <span className="hidden xs:inline">Agregar Producto</span>
+                <span className="xs:hidden">Agregar</span>
               </button>
             )}
-            <button onClick={() => openCategoriaModal()} className="px-6 py-2 rounded-md transition-colors flex items-center gap-2 font-semibold shadow-lg text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <button onClick={() => openCategoriaModal()} className="w-full sm:w-auto px-4 sm:px-6 py-2 rounded-md transition-colors flex items-center justify-center gap-2 font-semibold shadow-lg text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-sm sm:text-base">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              Gestionar Categorías
+              <span className="hidden xs:inline">Gestionar Categorías</span>
+              <span className="xs:hidden">Categorías</span>
             </button>
           </div>
         </div>
         {/* Filtros */}
-        <div className={`rounded-xl shadow-xl p-4 sm:p-6 mb-6 transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-800/95 via-slate-800/90 to-slate-800/95 border border-slate-700/50 hover:border-slate-600/70' : 'bg-white hover:shadow-lg border border-gray-200'}`}>
-          <div className="flex items-center gap-2 mb-4">
-            <svg className={`w-5 h-5 transition-colors ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`rounded-xl shadow-xl p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6 transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-br from-slate-800/95 via-slate-800/90 to-slate-800/95 border border-slate-700/50 hover:border-slate-600/70' : 'bg-white hover:shadow-lg border border-gray-200'}`}>
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <svg className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            <h3 className={`text-lg font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Filtros de Búsqueda</h3>
+            <h3 className={`text-base sm:text-lg font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Filtros de Búsqueda</h3>
           </div>
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-64">
-              <label className={`block text-sm font-semibold mb-2 transition-colors flex items-center gap-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-end">
+            <div className="flex-1 w-full sm:min-w-[200px] lg:min-w-64">
+              <label className={`block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 transition-colors flex items-center gap-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Buscar
@@ -459,17 +475,17 @@ const Inventario = () => {
                   type="text" 
                   value={busqueda} 
                   onChange={e => setBusqueda(e.target.value)} 
-                  placeholder="Buscar por nombre o descripción..." 
-                  className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${isDarkMode ? 'bg-slate-700/80 border-slate-600 text-white placeholder-gray-500 focus:ring-orange-500 focus:border-orange-500/50' : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'}`} 
+                  placeholder="Buscar por nombre..." 
+                  className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${isDarkMode ? 'bg-slate-700/80 border-slate-600 text-white placeholder-gray-500 focus:ring-orange-500 focus:border-orange-500/50' : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'}`} 
                 />
-                <svg className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
             </div>
-            <div className="min-w-48">
-              <label className={`block text-sm font-semibold mb-2 transition-colors flex items-center gap-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-full sm:w-auto sm:min-w-[180px] lg:min-w-48">
+              <label className={`block text-xs sm:text-sm font-semibold mb-1 sm:mb-2 transition-colors flex items-center gap-2 ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
                 Categoría
@@ -478,30 +494,30 @@ const Inventario = () => {
                 <select 
                   value={categoriaFiltro} 
                   onChange={e => setCategoriaFiltro(e.target.value)} 
-                  className={`w-full pl-10 pr-10 py-2.5 border rounded-lg appearance-none focus:outline-none focus:ring-2 transition-all duration-200 cursor-pointer ${isDarkMode ? 'bg-slate-700/80 border-slate-600 text-white focus:ring-orange-500 focus:border-orange-500/50' : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'}`}
+                  className={`w-full pl-8 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg appearance-none focus:outline-none focus:ring-2 transition-all duration-200 cursor-pointer ${isDarkMode ? 'bg-slate-700/80 border-slate-600 text-white focus:ring-orange-500 focus:border-orange-500/50' : 'border-gray-300 focus:ring-orange-500 focus:border-orange-500'}`}
                 >
                   <option value="">Todas las categorías</option>
                   {categorias.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.nombre}</option>
                   ))}
                 </select>
-                <svg className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-                <svg className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
             </div>
             <button 
               onClick={() => { setBusqueda(''); setCategoriaFiltro(''); setPagina(1); }} 
-              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+              className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                 isDarkMode 
                   ? 'bg-gradient-to-r from-gray-600 to-gray-500 text-white hover:from-gray-500 hover:to-gray-400 border border-gray-500/50' 
                   : 'bg-gradient-to-r from-gray-600 to-gray-500 text-white hover:from-gray-500 hover:to-gray-400'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
               Limpiar
@@ -510,24 +526,24 @@ const Inventario = () => {
         </div>
         {/* Tabla de productos */}
         <div className={`rounded-xl shadow-xl overflow-hidden transition-all duration-300 ${isDarkMode ? 'bg-slate-800/90 border border-slate-700/50 hover:border-slate-600' : 'bg-white hover:shadow-lg'}`}>
-          <div className={`px-6 py-4 border-b flex justify-between items-center transition-colors ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'}`}>
-            <h3 className={`text-xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Lista de Productos ({productosFiltrados.length})</h3>
+          <div className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-colors ${isDarkMode ? 'border-slate-700/50' : 'border-gray-200'}`}>
+            <h3 className={`text-lg sm:text-xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Lista de Productos ({productosFiltrados.length})</h3>
             <button 
               onClick={cargarDatos} 
               title="Recargar productos" 
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582M20 20v-5h-.581M5.635 19.364A9 9 0 1 1 19.364 5.636" />
               </svg>
               Recargar
             </button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
             <table className={`min-w-full divide-y transition-colors ${isDarkMode ? 'divide-slate-700' : 'divide-gray-200'}`}>
               <thead className={`transition-all duration-300 ${isDarkMode ? 'bg-gradient-to-r from-slate-700/80 via-slate-700/60 to-slate-700/80 border-b-2 border-slate-600/50' : 'bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b-2 border-gray-200'}`}>
                 <tr>
-                  <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'text-blue-300' : 'text-gray-700'}`}>
+                  <th className={`px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-left text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'text-blue-300' : 'text-gray-700'}`}>
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -568,12 +584,13 @@ const Inventario = () => {
                     </div>
                   </th>
                   <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider transition-colors ${isDarkMode ? 'text-blue-300' : 'text-gray-700'}`}>
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      Acciones
+                      <span className="hidden sm:inline">Acciones</span>
+                      <span className="sm:hidden">Acc.</span>
                     </div>
                   </th>
                 </tr>
@@ -587,18 +604,22 @@ const Inventario = () => {
                       : idx % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
-                    <td className="px-6 py-4">
-                      <div className={`text-base font-semibold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{producto.nombre}</div>
-                      {producto.descripcion && <div className={`text-xs truncate max-w-xs transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{producto.descripcion}</div>}
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+                      <div className={`text-sm sm:text-base font-semibold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{producto.nombre}</div>
+                      {producto.descripcion && <div className={`text-xs truncate max-w-[150px] sm:max-w-xs transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{producto.descripcion}</div>}
+                      {/* Mostrar categoría en móvil */}
+                      <div className="md:hidden mt-1">
+                        <span className={`text-xs font-semibold transition-colors ${isDarkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>{producto.categoria?.nombre || 'Sin categoría'}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 hidden md:table-cell">
                       <span className={`font-semibold transition-colors ${isDarkMode ? 'text-cyan-400' : 'text-cyan-700'}`}>{producto.categoria?.nombre || 'Sin categoría'}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`font-semibold transition-colors ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatearPrecio(producto.precio)}</span>
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+                      <span className={`text-xs sm:text-sm font-semibold transition-colors ${isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>{formatearPrecio(producto.precio)}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-sm font-semibold transition-colors ${
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+                      <span className={`text-xs sm:text-sm font-semibold transition-colors ${
                         producto.stock > 10 
                           ? isDarkMode ? 'text-green-400' : 'text-green-600' 
                           : producto.stock > 0 
@@ -606,45 +627,47 @@ const Inventario = () => {
                             : isDarkMode ? 'text-red-400' : 'text-red-600'
                       }`}>{producto.stock}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 hidden sm:table-cell">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full transition-colors ${
                         producto.activo 
                           ? isDarkMode ? 'bg-green-900/30 text-green-300 border border-green-700' : 'bg-green-100 text-green-800'
                           : isDarkMode ? 'bg-red-900/30 text-red-300 border border-red-700' : 'bg-red-100 text-red-800'
                       }`}>{producto.activo ? 'Activo' : 'Inactivo'}</span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <div className="flex gap-2">
+                    <td className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium">
+                      <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                         {hasPermission('inventario.update') && (
                           <button
                             onClick={() => openModal(producto)}
                             title="Editar"
-                            className={`px-3 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 flex items-center gap-1.5 ${
+                            className={`w-full sm:w-auto px-2 sm:px-3 py-1.5 rounded-md font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-1.5 ${
                               isDarkMode 
                                 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/40 hover:bg-yellow-500/30 hover:border-yellow-500/60 hover:shadow-lg hover:shadow-yellow-500/20' 
                                 : 'bg-yellow-100 text-yellow-700 border border-yellow-300 hover:bg-yellow-200 hover:border-yellow-400 hover:shadow-md'
                             }`}
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            Editar
+                            <span className="hidden xs:inline">Editar</span>
+                            <span className="xs:hidden">✏️</span>
                           </button>
                         )}
                         {hasPermission('inventario.delete') && (
                           <button
                             onClick={() => handleDelete(producto.id)}
                             title="Eliminar"
-                            className={`px-3 py-1.5 rounded-md font-semibold text-sm transition-all duration-200 flex items-center gap-1.5 ${
+                            className={`w-full sm:w-auto px-2 sm:px-3 py-1.5 rounded-md font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-1.5 ${
                               isDarkMode 
                                 ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30 hover:border-red-500/60 hover:shadow-lg hover:shadow-red-500/20' 
                                 : 'bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 hover:border-red-400 hover:shadow-md'
                             }`}
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Eliminar
+                            <span className="hidden xs:inline">Eliminar</span>
+                            <span className="xs:hidden">🗑️</span>
                           </button>
                         )}
                       </div>
@@ -656,19 +679,23 @@ const Inventario = () => {
           </div>
           {/* Paginación */}
           {totalPaginas > 1 && (
-            <div className="flex justify-center items-center gap-2 my-6 select-none">
+            <div className="flex justify-center items-center gap-1 sm:gap-2 my-4 sm:my-6 select-none px-3 sm:px-0">
               {/* Botón Anterior */}
               <button
                 onClick={() => setPagina(Math.max(1, pagina - 1))}
                 disabled={pagina === 1}
-                className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm border ${
+                className={`flex items-center px-2 sm:px-4 py-2 rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm border ${
                   pagina === 1 
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 shadow-sm'
+                    ? isDarkMode 
+                      ? 'bg-slate-700 text-gray-500 border-slate-600 cursor-not-allowed' 
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : isDarkMode
+                      ? 'bg-slate-700 text-white border-slate-600 hover:bg-slate-600 hover:border-slate-500 shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 shadow-sm'
                 }`}
                 aria-label="Anterior"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
                 <span className="hidden sm:inline">Anterior</span>
@@ -685,10 +712,14 @@ const Inventario = () => {
                     <button
                       key={num}
                       onClick={() => setPagina(num)}
-                      className={`px-3 py-2 mx-1 rounded-lg font-semibold text-sm transition-all duration-200 border ${
+                      className={`px-2 sm:px-3 py-2 mx-0.5 sm:mx-1 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 border ${
                         pagina === num 
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 shadow-sm'
+                          ? isDarkMode
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
+                            : 'bg-blue-600 text-white border-blue-600 shadow-md transform scale-105'
+                          : isDarkMode
+                            ? 'bg-slate-700 text-white border-slate-600 hover:bg-slate-600 hover:border-slate-500 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 shadow-sm'
                       }`}
                       aria-current={pagina === num ? 'page' : undefined}
                     >
@@ -701,7 +732,7 @@ const Inventario = () => {
                   (num === pagina + 2 && pagina < totalPaginas - 2)
                 ) {
                   return (
-                    <span key={num} className="px-2 text-gray-400 text-lg font-medium">…</span>
+                    <span key={num} className={`px-1 sm:px-2 text-xs sm:text-lg font-medium transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>…</span>
                   );
                 }
                 return null;
@@ -711,15 +742,19 @@ const Inventario = () => {
               <button
                 onClick={() => setPagina(Math.min(totalPaginas, pagina + 1))}
                 disabled={pagina === totalPaginas}
-                className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 font-medium text-sm border ${
+                className={`flex items-center px-2 sm:px-4 py-2 rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm border ${
                   pagina === totalPaginas 
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 shadow-sm'
+                    ? isDarkMode
+                      ? 'bg-slate-700 text-gray-500 border-slate-600 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : isDarkMode
+                      ? 'bg-slate-700 text-white border-slate-600 hover:bg-slate-600 hover:border-slate-500 shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 shadow-sm'
                 }`}
                 aria-label="Siguiente"
               >
                 <span className="hidden sm:inline">Siguiente</span>
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 sm:ml-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -728,8 +763,8 @@ const Inventario = () => {
         </div>
         {/* Modal agregar/editar */}
         {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`rounded-lg shadow-lg p-8 w-full max-w-md relative transition-colors ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className={`rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 w-full max-w-md relative transition-colors max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
               <button className={`absolute top-2 right-2 transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeModal}>&times;</button>
               <h2 className={`text-2xl font-bold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{editando ? 'Editar Producto' : 'Agregar Producto'}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -862,8 +897,8 @@ const Inventario = () => {
 
         {/* Modal de Gestión de Categorías */}
         {showCategoriaModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className={`rounded-lg shadow-lg p-8 w-full max-w-2xl relative transition-colors ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+            <div className={`rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 w-full max-w-2xl relative transition-colors max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
               <button className={`absolute top-2 right-2 transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeCategoriaModal}>&times;</button>
               
               {mostrarFormularioCategoria ? (
