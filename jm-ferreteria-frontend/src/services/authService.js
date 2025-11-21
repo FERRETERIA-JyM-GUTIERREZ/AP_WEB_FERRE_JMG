@@ -2,10 +2,18 @@ import axios from 'axios';
 
 // Configuración de URL de API (debe incluir /api al final)
 const getApiUrl = () => {
-  // SIEMPRE usar la URL completa del backend en producción
+  // En producción, usar variable de entorno
   if (process.env.NODE_ENV === 'production') {
-    // Forzar la URL correcta sin depender de variables de entorno
-    return 'https://apwebferrejmg-production.up.railway.app/api';
+    const baseUrl = process.env.REACT_APP_API_URL || '';
+    if (baseUrl.endsWith('/api')) {
+      return baseUrl;
+    } else if (baseUrl.endsWith('/api/')) {
+      return baseUrl.slice(0, -1);
+    } else if (baseUrl) {
+      return `${baseUrl}/api`;
+    }
+    // Fallback si no hay variable de entorno
+    return '/api';
   }
   // En desarrollo
   const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000';
