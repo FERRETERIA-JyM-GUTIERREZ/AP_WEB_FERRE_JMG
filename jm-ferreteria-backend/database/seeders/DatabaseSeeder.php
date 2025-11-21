@@ -15,21 +15,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Usuario de prueba (admin)
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@ferreteria.com',
-            'password' => Hash::make('admin123'),
-            'rol' => 'admin',
-        ]);
+        // Usuario admin
+        User::firstOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Administrador',
+                'password' => Hash::make('admin123'),
+                'rol' => 'admin',
+                'activo' => true,
+            ]
+        );
 
-        // Usuario de prueba (vendedor)
-        User::create([
-            'name' => 'Vendedor',
-            'email' => 'vendedor@ferreteria.com',
-            'password' => Hash::make('vendedor123'),
-            'rol' => 'vendedor',
-        ]);
+        // Usuario vendedor
+        User::firstOrCreate(
+            ['email' => 'vendedor@gmail.com'],
+            [
+                'name' => 'Vendedor',
+                'password' => Hash::make('vendedor123'),
+                'rol' => 'vendedor',
+                'activo' => true,
+            ]
+        );
 
        
 
