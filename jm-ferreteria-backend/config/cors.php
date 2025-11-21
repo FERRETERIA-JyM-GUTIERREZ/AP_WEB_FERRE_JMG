@@ -25,6 +25,8 @@ return [
             env('FRONTEND_URL'), // URL de producción del frontend
             'https://ap-web-ferre-jmg.vercel.app', // URL de Vercel (nueva)
             'https://ap-web-ferre-jmg.vercel.app/', // URL de Vercel con barra final
+            'https://ap-web-ferre-jmg-git-main-ferreteria-jms-projects.vercel.app', // URL de Vercel (preview)
+            'https://*.vercel.app', // Permitir todas las URLs de Vercel (preview y producción)
             'https://ferreteriafrontend.vercel.app', // URL de Vercel (antigua - mantener por compatibilidad)
         ], function($value) {
             return !empty($value); // Filtrar valores vacíos o null
