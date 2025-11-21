@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs_18", "php82", "composer"]
+
+[phases.install]
+cmds = ["cd jm-ferreteria-backend && composer install --no-dev --optimize-autoloader"]
+
+[phases.build]
+cmds = [
+  "cd jm-ferreteria-backend && php artisan config:cache",
+  "cd jm-ferreteria-backend && php artisan route:cache",
+  "cd jm-ferreteria-backend && php artisan view:cache"
+]
+
+[start]
+cmd = "cd jm-ferreteria-backend && php artisan migrate --force && php -S 0.0.0.0:$PORT -t public"
+
