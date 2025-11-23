@@ -16,12 +16,15 @@ const ProductoCard = ({ producto, onVerDetalles, onWhatsApp, onFormulario }) => 
   const [cantidad, setCantidad] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadingFavorite, setLoadingFavorite] = useState(false);
+  const [imagenError, setImagenError] = useState(false);
 
   // Inicializar servicio de favoritos y verificar estado
   useEffect(() => {
     favoritosService.init(isAuthenticated(), user?.id);
     checkIfFavorite();
-  }, [isAuthenticated(), user?.id, producto.id]);
+    // Resetear estado de error de imagen cuando cambie el producto
+    setImagenError(false);
+  }, [isAuthenticated(), user?.id, producto.id, producto.imagen]);
 
   // Verificar si el producto está en favoritos (versión rápida)
   const checkIfFavorite = () => {
@@ -165,26 +168,27 @@ const ProductoCard = ({ producto, onVerDetalles, onWhatsApp, onFormulario }) => 
     <div className={cardClasses}>
       {/* Imagen del producto - Bien contenida */}
       <div className={imageWrapperClasses}>
-        {producto.imagen ? (
+        {producto.imagen && !imagenError ? (
           <img 
             src={`${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
             alt={producto.nombre} 
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-            onLoad={() => console.log('✅ Imagen cargada exitosamente:', producto.imagen)}
+            onLoad={() => {
+              console.log('✅ Imagen cargada exitosamente:', producto.imagen);
+              setImagenError(false);
+            }}
             onError={(e) => {
               console.error('❌ Error al cargar imagen:', producto.imagen);
               console.error('❌ Ruta completa:', `${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
               // Si la imagen falla, mostrar placeholder SVG
+              setImagenError(true);
               e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'block';
             }}
           />
-        ) : (
-          console.log('⚠️ Producto sin imagen:', producto.nombre)
-        )}
+        ) : null}
         
         {/* Placeholder SVG cuando no hay imagen o falla */}
-        <div className={`w-full h-full flex flex-col items-center justify-center ${placeholderTextClass} ${producto.imagen ? 'hidden' : 'block'}`}>
+        <div className={`w-full h-full flex flex-col items-center justify-center ${placeholderTextClass} ${producto.imagen && !imagenError ? 'hidden' : 'block'}`}>
           <svg className="w-full h-full" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
             <rect width="300" height="200" fill={isDarkMode ? '#0f172a' : '#f5f5f5'} stroke="#e5e7eb" strokeWidth="1"/>
             <text x="150" y="90" fontFamily="Arial, sans-serif" fontSize="18" fill="#9ca3af" textAnchor="middle" dominantBaseline="middle">
