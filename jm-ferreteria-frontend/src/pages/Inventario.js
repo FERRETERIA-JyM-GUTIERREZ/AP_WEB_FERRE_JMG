@@ -859,7 +859,7 @@ const Inventario = () => {
                     className={`w-full border rounded px-3 py-2 transition-colors ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white' : 'border-gray-300'}`}
                   />
                   <p className={`text-xs mt-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB
+                    Formatos: JPG, PNG, GIF, JFIF, WEBP. Tamaño máximo: 5MB
                   </p>
                 </div>
                 <div>

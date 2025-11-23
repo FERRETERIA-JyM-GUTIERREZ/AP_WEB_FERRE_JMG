@@ -285,7 +285,7 @@ class ProductoController extends Controller
             \Log::info('📤 Iniciando subida de imagen');
             
             $validator = Validator::make($request->all(), [
-                'imagen' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB máximo
+                'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,jfif,webp|max:5120', // 5MB máximo - acepta jfif y webp
             ]);
 
             if ($validator->fails()) {
