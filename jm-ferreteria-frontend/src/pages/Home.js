@@ -212,7 +212,7 @@ const Home = () => {
                   <FaRocket className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-orange-900 mb-1 text-sm">Nuestra Historia</h3>
-                    <p className="text-xs text-gray-700 leading-relaxed">J&M GUTIERREZ E.I.R.L. nació de la visión de proporcionar suministros industriales y de ferretería de alta calidad. Con más de 10 años de experiencia en el mercado.</p>
+                    <p className="text-xs text-gray-700 leading-relaxed">J&M GUTIERREZ E.I.R.L. nació de la visión de proporcionar suministros industriales y de ferretería de alta calidad. Con más de 10 años de experiencia en el mercado. Empresa legalmente inscrita en SUNAT desde el 01 de agosto de 2023.</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-2">
@@ -290,13 +290,23 @@ const Home = () => {
         <div className="relative max-w-screen-2xl mx-auto px-2 sm:px-3 lg:px-6 xl:px-8 py-24 lg:py-32">
           <div ref={heroRef} className="text-center">
             {/* Badge de confianza */}
-            <div className={`inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-8 transition-all duration-1000 ease-out transform ${
+            <div className={`inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium mb-4 transition-all duration-1000 ease-out transform ${
               animatedElements.hero ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
             }`}>
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Más de 9 años de experiencia
+              Más de 10 años de experiencia
+            </div>
+            
+            {/* Badge de información legal SUNAT */}
+            <div className={`inline-flex items-center px-4 py-2 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-300/30 text-white text-xs font-medium mb-8 transition-all duration-1000 ease-out delay-100 transform ${
+              animatedElements.hero ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
+            }`}>
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01"/>
+              </svg>
+              Inscrito en SUNAT desde 01/08/2023
             </div>
             
             <h1 
@@ -401,8 +411,9 @@ const Home = () => {
                 animatedElements.cards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
-              <strong className="text-orange-900">J&M GUTIÉRREZ</strong> es una ferretería que ha proporcionado suministros industriales y de ferretería de alta calidad durante más de 9 años. 
-              Ubicados en Juliaca, Puno, Perú, crecemos constantemente, comprometidos con ofrecer las mejores marcas y asesoramiento experto.
+              <strong className="text-orange-900">J&M GUTIÉRREZ</strong> es una ferretería que ha proporcionado suministros industriales y de ferretería de alta calidad durante más de 10 años. 
+              Ubicados en Juliaca, Puno, Perú, crecemos constantemente, comprometidos con ofrecer las mejores marcas y asesoramiento experto. 
+              Empresa legalmente inscrita en SUNAT desde el 01 de agosto de 2023.
             </p>
           </div>
 
@@ -416,7 +427,7 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-orange-900 mb-1.5 group-hover:text-orange-600 transition-colors duration-300 text-center">Más de 9 años</h3>
+              <h3 className="text-base font-bold text-orange-900 mb-1.5 group-hover:text-orange-600 transition-colors duration-300 text-center">Más de 10 años</h3>
               <p className="text-xs text-orange-700 leading-relaxed text-center">De experiencia en el mercado, conociendo las necesidades de nuestros clientes</p>
             </div>
 
