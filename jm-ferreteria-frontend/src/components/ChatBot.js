@@ -200,11 +200,13 @@ const ChatBot = () => {
           });
           return { ...respuesta, type: 'productos', nuevoEstado: 'menu_productos' };
         } else {
-        return {
-            text: `🛍️ <strong>NUESTROS PRODUCTOS</strong><br><br>Estamos cargando nuestras categorías. Por favor, intente nuevamente en un momento.<br><br><strong>Opciones:</strong><br><br>1.- 🔄 Volver al menú principal<br>2.- 📞 Contactar vendedor<br><br><strong>Escriba un número:</strong>`,
+          // No hay categorías disponibles
+          setCategorias([]);
+          return {
+            text: `🛍️ <strong>NUESTROS PRODUCTOS</strong><br><br>Actualmente no hay categorías disponibles en nuestro catálogo.<br><br>Por favor, contacta a nuestro vendedor para más información sobre nuestros productos.<br><br><strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>`,
             opcionesNumeradas: true,
             type: 'productos',
-            nuevoEstado: 'menu_principal'
+            nuevoEstado: 'menu_productos'
           };
         }
       
@@ -258,6 +260,26 @@ const ChatBot = () => {
   // Manejar menú de productos
   const manejarMenuProductos = async (numero) => {
     if (!datosEmpresa) return null;
+
+    // Si no hay categorías, solo permitir contactar vendedor o volver
+    if (categorias.length === 0) {
+      if (numero === 1) {
+        return {
+          ...chatbotService.generarRespuesta('contacto', datosEmpresa),
+          nuevoEstado: 'menu_contacto'
+        };
+      } else if (numero === 2) {
+        return volverAlMenuPrincipal();
+      } else {
+        return {
+          ...chatbotService.generarRespuesta('error_invalido', datosEmpresa, {
+            numero: numero,
+            maximo: 2
+          }),
+          nuevoEstado: 'menu_productos'
+        };
+      }
+    }
 
     const maxOpciones = categorias.length + 1; // Categorías + Contactar vendedor
 
@@ -314,16 +336,23 @@ const ChatBot = () => {
     switch (numero) {
       case 1: // Ver otras categorías
         const categoriasData = await chatbotService.obtenerCategorias();
-        if (categoriasData.success) {
+        if (categoriasData.success && categoriasData.categorias.length > 0) {
           setCategorias(categoriasData.categorias);
-        return {
+          return {
             ...chatbotService.generarRespuesta('productos', datosEmpresa, {
               categorias: categoriasData.categorias
             }),
             nuevoEstado: 'menu_productos'
           };
+        } else {
+          // No hay categorías disponibles
+          setCategorias([]);
+          return {
+            text: `🛍️ <strong>NUESTROS PRODUCTOS</strong><br><br>Actualmente no hay categorías disponibles en nuestro catálogo.<br><br>Por favor, contacta a nuestro vendedor para más información sobre nuestros productos.<br><br><strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>`,
+            opcionesNumeradas: true,
+            nuevoEstado: 'menu_productos'
+          };
         }
-        break;
       
       case 2: // Contactar vendedor
         return {
@@ -439,16 +468,23 @@ const ChatBot = () => {
     switch (numero) {
       case 1: // Ver productos con garantía
         const categoriasData = await chatbotService.obtenerCategorias();
-        if (categoriasData.success) {
+        if (categoriasData.success && categoriasData.categorias.length > 0) {
           setCategorias(categoriasData.categorias);
-        return {
+          return {
             ...chatbotService.generarRespuesta('productos', datosEmpresa, {
               categorias: categoriasData.categorias
             }),
             nuevoEstado: 'menu_productos'
           };
+        } else {
+          // No hay categorías disponibles
+          setCategorias([]);
+          return {
+            text: `🛍️ <strong>NUESTROS PRODUCTOS</strong><br><br>Actualmente no hay categorías disponibles en nuestro catálogo.<br><br>Por favor, contacta a nuestro vendedor para más información sobre nuestros productos con garantía.<br><br><strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>`,
+            opcionesNumeradas: true,
+            nuevoEstado: 'menu_productos'
+          };
         }
-        break;
       
       case 2: // Servicio técnico
         return {

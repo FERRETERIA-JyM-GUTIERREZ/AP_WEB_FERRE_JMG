@@ -259,7 +259,7 @@ class ChatbotService {
           };
         } else {
           return {
-            text: `🛍️ <strong>CATÁLOGO DE PRODUCTOS</strong><br><br>¿Qué tipo de producto te interesa?<br><br>1.- 🔨 Herramientas manuales<br>2.- ⚡ Herramientas eléctricas<br>3.- 🏗️ Materiales de construcción<br>4.- 🎨 Pinturas y acabados<br>5.- 🔧 Repuestos y accesorios<br>6.- 🛡️ Equipos de seguridad<br><br>7.- 📞 Contactar vendedor<br><br><strong>Escriba un número:</strong>`,
+            text: `🛍️ <strong>NUESTROS PRODUCTOS</strong><br><br>Actualmente no hay categorías disponibles en nuestro catálogo.<br><br>Por favor, contacta a nuestro vendedor para más información sobre nuestros productos.<br><br><strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>`,
             opcionesNumeradas: true
           };
         }
