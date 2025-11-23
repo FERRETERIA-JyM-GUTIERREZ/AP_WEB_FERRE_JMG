@@ -39,7 +39,8 @@ class DatabaseSeeder extends Seeder
 
        
 
-        // Crear categorías de ejemplo
+        // Crear categorías de ejemplo solo si no existen
+        // Esto evita que se vuelvan a crear categorías que el usuario ya eliminó
         $categorias = [
             [
                 'nombre' => 'Herramientas Manuales',
@@ -63,8 +64,12 @@ class DatabaseSeeder extends Seeder
             ]
         ];
 
-        foreach ($categorias as $cat) {
-            Categoria::create($cat);
+        // Solo crear categorías si la base de datos está vacía
+        // Si ya hay categorías, no crear las de ejemplo
+        if (Categoria::count() === 0) {
+            foreach ($categorias as $cat) {
+                Categoria::create($cat);
+            }
         }
 
         // Crear productos de ejemplo
@@ -161,8 +166,12 @@ class DatabaseSeeder extends Seeder
             ]
         ];
 
-        foreach ($productos as $prod) {
-            Producto::create($prod);
+        // Solo crear productos de ejemplo si la base de datos está vacía
+        // Si ya hay productos, no crear los de ejemplo
+        if (Producto::count() === 0) {
+            foreach ($productos as $prod) {
+                Producto::create($prod);
+            }
         }
     }
 }
