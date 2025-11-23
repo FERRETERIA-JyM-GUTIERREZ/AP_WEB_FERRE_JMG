@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Eliminar bordes azules por defecto del navegador */
+* {
+  outline: none !important;
+}
+
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+a:focus,
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
+/* Mantener accesibilidad con focus visible solo para navegación por teclado */
+*:focus-visible {
+  outline: 2px solid rgba(249, 115, 22, 0.5) !important;
+  outline-offset: 2px !important;
+}
+
 /* Animaciones 3D */
 @keyframes float-up {
   0% {

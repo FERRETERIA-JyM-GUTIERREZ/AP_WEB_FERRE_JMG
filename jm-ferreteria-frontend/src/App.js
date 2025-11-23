@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
@@ -44,37 +44,37 @@ import Notas from './pages/Notas';
 import ArbolNavidad from './components/ArbolNavidad';
 import FloatingContactButtons from './components/FloatingContactButtons';
 
-function App() {
+// Componente interno que usa el hook useAuth
+function AppContent() {
+  const { isAuthenticated, isAdmin, isVendedor } = useAuth();
+  const hasSidebar = isAuthenticated() && (isAdmin() || isVendedor());
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <Router>
-          <div className="App">
-              <Toaster 
-                position="top-center"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    duration: 3000,
-                    style: {
-                      background: '#10b981',
-                    },
-                  },
-                  error: {
-                    duration: 5000,
-                    style: {
-                      background: '#ef4444',
-                    },
-                  },
-                }}
-              />
-              <Navbar />
-              <div className="lg:ml-64 xl:ml-72 transition-all duration-300">
+    <div className="App">
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            style: {
+              background: '#10b981',
+            },
+          },
+          error: {
+            duration: 5000,
+            style: {
+              background: '#ef4444',
+            },
+          },
+        }}
+      />
+      <Navbar />
+      <div className={hasSidebar ? "lg:ml-64 xl:ml-72 transition-all duration-300" : "transition-all duration-300"}>
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/catalogo" element={<Catalogo />} />
@@ -167,9 +167,19 @@ function App() {
               <ArbolNavidad />
               <FloatingContactButtons />
           </div>
-        </Router>
-      </CartProvider>
-    </AuthProvider>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </CartProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
