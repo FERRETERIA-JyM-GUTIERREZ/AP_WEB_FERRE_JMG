@@ -49,11 +49,18 @@ const Checkout = () => {
   const fetchCiudadesConAgencias = async () => {
     try {
       const response = await api.get('/envios/ciudades');
+      console.log('🔍 Respuesta de ciudades:', response.data);
       if (response.data.success) {
         setCiudadesConAgencias(response.data.data || []);
+        console.log('✅ Ciudades cargadas:', response.data.data?.length || 0);
+      } else {
+        console.warn('⚠️ La API no devolvió success:', response.data);
       }
     } catch (error) {
-      console.error('Error al cargar ciudades con agencias:', error);
+      console.error('❌ Error al cargar ciudades con agencias:', error);
+      console.error('❌ Detalles del error:', error.response?.data || error.message);
+      // Si hay error, dejar el array vacío para que no se muestre nada
+      setCiudadesConAgencias([]);
     }
   };
 
@@ -689,14 +696,24 @@ ${ventaData.items.map((item, index) => {
                       onChange={(e) => setCiudadSeleccionada(e.target.value)}
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
                       required
+                      disabled={ciudadesConAgencias.length === 0}
                     >
-                      <option value="">Selecciona una ciudad</option>
+                      <option value="">
+                        {ciudadesConAgencias.length === 0 
+                          ? 'Cargando ciudades...' 
+                          : 'Selecciona una ciudad'}
+                      </option>
                       {ciudadesConAgencias.map((item, index) => (
                         <option key={index} value={item.ciudad}>
                           {item.ciudad} - {item.departamento}
                         </option>
                       ))}
                     </select>
+                    {ciudadesConAgencias.length === 0 && (
+                      <p className="mt-2 text-sm text-yellow-600">
+                        ⚠️ No hay ciudades disponibles. Asegúrate de que las agencias de Shalon estén cargadas en la base de datos.
+                      </p>
+                    )}
                   </div>
 
                   {ciudadSeleccionada && agencias.length > 0 && (
