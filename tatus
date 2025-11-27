@@ -1,0 +1,56 @@
+warning: in the working copy of 'jm-ferreteria-frontend/src/pages/Inventario.js', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/jm-ferreteria-frontend/src/pages/Inventario.js b/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[1mindex fd8b748..aa4fc7c 100644[m
+[1m--- a/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[1m+++ b/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[36m@@ -28,21 +28,7 @@[m [mconst Inventario = () => {[m
+   const [imagenPreview, setImagenPreview] = useState(null);[m
+   const navigate = useNavigate();[m
+   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();[m
+[31m-  const { isDarkMode, setIsDarkMode } = useTheme();[m
+[31m-[m
+[31m-  // Forzar modo oscuro por defecto en gestión de inventario[m
+[31m-  useEffect(() => {[m
+[31m-    const savedTheme = localStorage.getItem('inventario_theme');[m
+[31m-    if (savedTheme === null) {[m
+[31m-      // Si no hay preferencia guardada para inventario, usar modo oscuro por defecto[m
+[31m-      setIsDarkMode(true);[m
+[31m-      localStorage.setItem('inventario_theme', 'dark');[m
+[31m-    } else if (savedTheme === 'dark') {[m
+[31m-      setIsDarkMode(true);[m
+[31m-    } else {[m
+[31m-      setIsDarkMode(false);[m
+[31m-    }[m
+[31m-  }, [setIsDarkMode]);[m
+[32m+[m[32m  const { isDarkMode } = useTheme();[m
+ [m
+   // Validar acceso con sistema de permisos[m
+   useEffect(() => {[m
+warning: in the working copy of 'jm-ferreteria-frontend/src/pages/Inventario.js', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/jm-ferreteria-frontend/src/pages/Inventario.js b/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[1mindex fd8b748..aa4fc7c 100644[m
+[1m--- a/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[1m+++ b/jm-ferreteria-frontend/src/pages/Inventario.js[m
+[36m@@ -28,21 +28,7 @@[m [mconst Inventario = () => {[m
+   const [imagenPreview, setImagenPreview] = useState(null);[m
+   const navigate = useNavigate();[m
+   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();[m
+[31m-  const { isDarkMode, setIsDarkMode } = useTheme();[m
+[31m-[m
+[31m-  // Forzar modo oscuro por defecto en gestión de inventario[m
+[31m-  useEffect(() => {[m
+[31m-    const savedTheme = localStorage.getItem('inventario_theme');[m
+[31m-    if (savedTheme === null) {[m
+[31m-      // Si no hay preferencia guardada para inventario, usar modo oscuro por defecto[m
+[31m-      setIsDarkMode(true);[m
+[31m-      localStorage.setItem('inventario_theme', 'dark');[m
+[31m-    } else if (savedTheme === 'dark') {[m
+[31m-      setIsDarkMode(true);[m
+[31m-    } else {[m
+[31m-      setIsDarkMode(false);[m
+[31m-    }[m
+[31m-  }, [setIsDarkMode]);[m
+[32m+[m[32m  const { isDarkMode } = useTheme();[m
+ [m
+   // Validar acceso con sistema de permisos[m
+   useEffect(() => {[m

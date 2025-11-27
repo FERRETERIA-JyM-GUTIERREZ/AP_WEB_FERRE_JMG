@@ -28,21 +28,7 @@ const Inventario = () => {
   const [imagenPreview, setImagenPreview] = useState(null);
   const navigate = useNavigate();
   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();
-  const { isDarkMode, setIsDarkMode } = useTheme();
-
-  // Forzar modo oscuro por defecto en gestión de inventario
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('inventario_theme');
-    if (savedTheme === null) {
-      // Si no hay preferencia guardada para inventario, usar modo oscuro por defecto
-      setIsDarkMode(true);
-      localStorage.setItem('inventario_theme', 'dark');
-    } else if (savedTheme === 'dark') {
-      setIsDarkMode(true);
-    } else {
-      setIsDarkMode(false);
-    }
-  }, [setIsDarkMode]);
+  const { isDarkMode } = useTheme();
 
   // Validar acceso con sistema de permisos
   useEffect(() => {
