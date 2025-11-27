@@ -15,7 +15,8 @@ Route::get('/img_productos/{filename}', function ($filename) {
     
     // Si Cloudinary está configurado y la imagen viene de ahí, redirigir
     // (Las imágenes de Cloudinary tienen formato: productos/xxxxx.jpg)
-    if (config('cloudinary.cloud_url')) {
+    $cloudinaryUrl = config('cloudinary.cloud_url') ?: env('CLOUDINARY_URL');
+    if ($cloudinaryUrl) {
         // Intentar construir URL de Cloudinary
         $cloudName = config('cloudinary.cloud_name');
         if ($cloudName) {

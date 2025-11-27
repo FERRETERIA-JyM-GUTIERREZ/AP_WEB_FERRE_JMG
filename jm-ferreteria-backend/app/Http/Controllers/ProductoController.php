@@ -318,9 +318,19 @@ class ProductoController extends Controller
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
                 // Intentar usar Cloudinary si está configurado, sino usar Storage local
-                if (config('cloudinary.cloud_url')) {
-                    // Subir a Cloudinary
-                    $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                // Verificar tanto la configuración como la variable de entorno
+                $cloudinaryUrl = config('cloudinary.cloud_url') ?: env('CLOUDINARY_URL');
+                
+                \Log::info('🔍 Verificando Cloudinary', [
+                    'cloudinary_config' => config('cloudinary.cloud_url'),
+                    'cloudinary_env' => env('CLOUDINARY_URL') ? 'Configurado' : 'No configurado',
+                    'cloudinary_detected' => $cloudinaryUrl ? 'Sí' : 'No'
+                ]);
+                
+                if ($cloudinaryUrl) {
+                    try {
+                        // Subir a Cloudinary
+                        $uploadResult = Cloudinary::upload($file->getRealPath(), [
                         'folder' => 'productos',
                         'public_id' => pathinfo($filename, PATHINFO_FILENAME),
                         'resource_type' => 'image',
@@ -344,7 +354,26 @@ class ProductoController extends Controller
                             'url' => $imageUrl
                         ]
                     ]);
+                    } catch (\Exception $e) {
+                        \Log::error('💥 Error al subir a Cloudinary', [
+                            'message' => $e->getMessage(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine()
+                        ]);
+                        // Fallback a storage local si Cloudinary falla
+                        $path = $file->storeAs('productos', $filename, 'public');
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Imagen subida localmente (Cloudinary falló)',
+                            'data' => [
+                                'filename' => $filename,
+                                'path' => $path,
+                                'url' => Storage::url($path)
+                            ]
+                        ]);
+                    }
                 } else {
+                    \Log::info('⚠️ Cloudinary no configurado, usando storage local');
                     // Fallback: Usar Storage de Laravel local
                     $path = $file->storeAs('productos', $filename, 'public');
                     
