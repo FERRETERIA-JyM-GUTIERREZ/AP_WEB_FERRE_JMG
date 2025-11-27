@@ -254,6 +254,13 @@ const Inventario = () => {
           toast.error('Error al subir la imagen');
           return;
         }
+      } else if (editando) {
+        // Si estamos editando y NO hay nueva imagen, preservar la imagen existente
+        // Asegurarse de que productData.imagen tenga el valor del producto original
+        if (!productData.imagen && form.imagen) {
+          productData.imagen = form.imagen;
+        }
+        console.log('💾 Preservando imagen existente:', productData.imagen);
       }
       
       console.log('💾 Guardando producto:', productData);

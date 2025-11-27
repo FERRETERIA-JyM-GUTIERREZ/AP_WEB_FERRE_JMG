@@ -134,12 +134,24 @@ class ProductoController extends Controller
         }
 
         try {
-            $producto->update($request->all());
+            // Preparar datos para actualizar
+            $updateData = $request->only([
+                'nombre', 'descripcion', 'precio', 'stock', 
+                'categoria_id', 'activo'
+            ]);
+            
+            // Solo actualizar imagen si viene en el request y no está vacía
+            if ($request->has('imagen') && !empty($request->imagen)) {
+                $updateData['imagen'] = $request->imagen;
+            }
+            // Si no viene imagen o está vacía, preservar la imagen existente (no actualizar)
+            
+            $producto->update($updateData);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Producto actualizado exitosamente',
-                'data' => $producto
+                'data' => $producto->fresh()
             ]);
         } catch (\Exception $e) {
             return response()->json([
