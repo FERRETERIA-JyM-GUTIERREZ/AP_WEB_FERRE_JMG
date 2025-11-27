@@ -102,28 +102,38 @@ Route::post('/pedidos/publico', [PedidoController::class, 'store']);
 
 // Rutas de envíos (públicas)
 Route::get('/envios/destinos', [EnvioController::class, 'getDestinos']);
+Route::get('/envios/agencias', [EnvioController::class, 'getAgencias']);
+Route::get('/envios/agencias/ciudad/{ciudad}', [EnvioController::class, 'getAgenciasPorCiudad']);
+Route::get('/envios/ciudades', [EnvioController::class, 'getCiudadesConAgencias']);
 
-// Ruta temporal para ejecutar seeder de destinos (ELIMINAR DESPUÉS DE USAR)
-Route::get('/seed-destinos/{clave}', function ($clave) {
+// Ruta temporal para ejecutar migración y seeder de agencias (ELIMINAR DESPUÉS DE USAR)
+Route::get('/setup-agencias/{clave}', function ($clave) {
     if ($clave !== 'jym2024ferreteria') {
         return response()->json(['error' => 'Clave incorrecta'], 403);
     }
     
     try {
-        // Usar --force para evitar la confirmación en producción
+        // Ejecutar migración
+        \Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = \Artisan::output();
+        
+        // Ejecutar seeder
         \Artisan::call('db:seed', [
-            '--class' => 'DestinoEnvioSeeder',
+            '--class' => 'AgenciaEnvioSeeder',
             '--force' => true
         ]);
+        $seedOutput = \Artisan::output();
+        
         return response()->json([
             'success' => true,
-            'message' => 'Seeder ejecutado correctamente',
-            'output' => \Artisan::output()
+            'message' => 'Migración y seeder ejecutados correctamente',
+            'migration_output' => $migrateOutput,
+            'seed_output' => $seedOutput
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'Error al ejecutar seeder: ' . $e->getMessage(),
+            'message' => 'Error al ejecutar: ' . $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ], 500);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Envio;
 use App\Models\DestinoEnvio;
+use App\Models\AgenciaEnvio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -165,6 +166,91 @@ class EnvioController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear envío: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener todas las agencias de envío
+     */
+    public function getAgencias(Request $request)
+    {
+        try {
+            $query = AgenciaEnvio::activas()->porTransportista('Shalon');
+            
+            // Filtrar por ciudad si se proporciona
+            if ($request->has('ciudad')) {
+                $query->porCiudad($request->ciudad);
+            }
+            
+            // Filtrar por departamento si se proporciona
+            if ($request->has('departamento')) {
+                $query->porDepartamento($request->departamento);
+            }
+            
+            $agencias = $query->orderBy('ciudad')->orderBy('nombre')->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $agencias,
+                'total' => $agencias->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener agencias: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener agencias por ciudad
+     */
+    public function getAgenciasPorCiudad($ciudad)
+    {
+        try {
+            $agencias = AgenciaEnvio::activas()
+                ->porTransportista('Shalon')
+                ->porCiudad($ciudad)
+                ->orderBy('nombre')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $agencias,
+                'total' => $agencias->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener agencias: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener ciudades disponibles con agencias
+     */
+    public function getCiudadesConAgencias()
+    {
+        try {
+            $ciudades = AgenciaEnvio::activas()
+                ->porTransportista('Shalon')
+                ->select('ciudad', 'departamento')
+                ->distinct()
+                ->orderBy('departamento')
+                ->orderBy('ciudad')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $ciudades,
+                'total' => $ciudades->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener ciudades: ' . $e->getMessage()
             ], 500);
         }
     }
