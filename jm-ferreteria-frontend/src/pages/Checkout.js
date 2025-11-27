@@ -12,6 +12,13 @@ const Checkout = () => {
   const [destinos, setDestinos] = useState([]);
   const [destinoSeleccionado, setDestinoSeleccionado] = useState('');
   const [tipoEnvioSeleccionado, setTipoEnvioSeleccionado] = useState('terrestre');
+  
+  // Estados para agencias de Shalon (terrestre)
+  const [ciudadesConAgencias, setCiudadesConAgencias] = useState([]);
+  const [ciudadSeleccionada, setCiudadSeleccionada] = useState('');
+  const [agencias, setAgencias] = useState([]);
+  const [agenciaSeleccionada, setAgenciaSeleccionada] = useState('');
+  
   const [datosEnvio, setDatosEnvio] = useState({
     nombre: '',
     telefono: '',
@@ -28,6 +35,7 @@ const Checkout = () => {
       return;
     }
     fetchDestinos();
+    fetchCiudadesConAgencias(); // Cargar ciudades con agencias de Shalon
     if (user) {
       setDatosEnvio(prev => ({
         ...prev,
@@ -36,6 +44,43 @@ const Checkout = () => {
       }));
     }
   }, []);
+
+  // Cargar ciudades con agencias de Shalon
+  const fetchCiudadesConAgencias = async () => {
+    try {
+      const response = await api.get('/envios/ciudades');
+      if (response.data.success) {
+        setCiudadesConAgencias(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar ciudades con agencias:', error);
+    }
+  };
+
+  // Cargar agencias cuando se selecciona una ciudad
+  useEffect(() => {
+    if (tipoEnvioSeleccionado === 'terrestre' && ciudadSeleccionada) {
+      fetchAgenciasPorCiudad(ciudadSeleccionada);
+    } else {
+      setAgencias([]);
+      setAgenciaSeleccionada('');
+    }
+  }, [ciudadSeleccionada, tipoEnvioSeleccionado]);
+
+  const fetchAgenciasPorCiudad = async (ciudad) => {
+    try {
+      const response = await api.get(`/envios/agencias/ciudad/${encodeURIComponent(ciudad)}`);
+      if (response.data.success) {
+        setAgencias(response.data.data || []);
+        if (response.data.data.length > 0) {
+          setAgenciaSeleccionada(response.data.data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar agencias:', error);
+      setAgencias([]);
+    }
+  };
 
   const fetchDestinos = async () => {
     try {
@@ -129,8 +174,18 @@ const Checkout = () => {
       camposFaltantes.push('Ciudad');
     }
 
-    if (!destinoSeleccionado || destinoSeleccionado === '') {
-      camposFaltantes.push('Destino de envío');
+    // Validar según tipo de envío
+    if (tipoEnvioSeleccionado === 'terrestre') {
+      if (!ciudadSeleccionada || ciudadSeleccionada === '') {
+        camposFaltantes.push('Ciudad de destino');
+      }
+      if (!agenciaSeleccionada || agenciaSeleccionada === '') {
+        camposFaltantes.push('Agencia de Shalon');
+      }
+    } else {
+      if (!destinoSeleccionado || destinoSeleccionado === '') {
+        camposFaltantes.push('Destino de envío');
+      }
     }
 
     // Validar que el carrito tenga productos
@@ -194,12 +249,23 @@ const Checkout = () => {
     try {
       console.log('📱 Creando pedido en el backend...');
       
+      // Obtener información de destino/agencia
+      let destinoInfo = '';
+      if (tipoEnvioSeleccionado === 'terrestre') {
+        const agenciaInfo = agencias.find(a => a.id == agenciaSeleccionada);
+        destinoInfo = agenciaInfo 
+          ? `Ciudad: ${ciudadSeleccionada}, Agencia: ${agenciaInfo.nombre}`
+          : `Ciudad: ${ciudadSeleccionada}`;
+      } else {
+        destinoInfo = getDestinoInfo()?.nombre || 'No especificado';
+      }
+
       // Crear pedido en el backend
       const pedidoData = {
         cliente_nombre: datosEnvio.nombre,
         cliente_telefono: datosEnvio.telefono,
         cliente_email: user?.email || '',
-        mensaje: `Pedido desde checkout - Destino: ${getDestinoInfo()?.nombre || 'No especificado'}, Tipo: ${tipoEnvioSeleccionado}`,
+        mensaje: `Pedido desde checkout - ${destinoInfo}, Tipo: ${tipoEnvioSeleccionado}`,
         tipo_pedido: 'whatsapp',
         productos: cart.map(item => ({
           producto_id: item.id,
@@ -369,8 +435,6 @@ Por favor, confirma disponibilidad y costo de envío.`;
     console.log('🔍 generarMensajeWhatsApp - ventaData:', ventaData);
     console.log('🔍 generarMensajeWhatsApp - ventaData.items:', ventaData.items);
     
-    const destino = getDestinoInfo();
-    const tipoEnvio = destino?.tipo_envio === 'aereo' ? '✈️ AÉREO' : '🚚 TERRESTRE';
     const fecha = new Date().toLocaleDateString('es-PE', {
       year: 'numeric',
       month: 'long',
@@ -378,6 +442,29 @@ Por favor, confirma disponibilidad y costo de envío.`;
       hour: '2-digit',
       minute: '2-digit'
     });
+    
+    // Construir información de envío según tipo
+    let infoEnvio = '';
+    if (tipoEnvioSeleccionado === 'terrestre') {
+      const agenciaInfo = agencias.find(a => a.id == agenciaSeleccionada);
+      if (agenciaInfo) {
+        infoEnvio = `🚚 *DATOS DE ENVÍO:*
+• *Tipo:* Terrestre (Shalon)
+• *Ciudad:* ${ciudadSeleccionada}
+• *Agencia:* ${agenciaInfo.nombre}
+• *Dirección:* ${agenciaInfo.direccion}
+${agenciaInfo.referencia ? `• *Referencia:* ${agenciaInfo.referencia}` : ''}`;
+      } else {
+        infoEnvio = `🚚 *DATOS DE ENVÍO:*
+• *Tipo:* Terrestre (Shalon)
+• *Ciudad:* ${ciudadSeleccionada || 'Por definir'}`;
+      }
+    } else {
+      const destino = getDestinoInfo();
+      infoEnvio = `✈️ *DATOS DE ENVÍO:*
+• *Tipo:* Aéreo
+• *Destino:* ${destino?.nombre || 'Por definir'}`;
+    }
     
     return `🛒 *NUEVA COMPRA - J&M GUTIÉRREZ*
 
@@ -390,10 +477,7 @@ Por favor, confirma disponibilidad y costo de envío.`;
 ${datosEnvio.dni && datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
 • *Ciudad:* ${datosEnvio.ciudad}
 
-📍 *DATOS DE ENVÍO:*
-• *Destino:* ${destino?.nombre || 'Por definir'}
-• *Tipo de Envío:* ${tipoEnvio}
-• *Terminal:* Por coordinar
+${infoEnvio}
 
 🛍️ *PRODUCTOS SOLICITADOS:*
 ${ventaData.items.map((item, index) => {
@@ -459,8 +543,10 @@ ${ventaData.items.map((item, index) => {
     );
   }
 
-  // Filtrar destinos por tipo de envío seleccionado
-  const destinosFiltrados = destinos.filter(d => d.tipo_envio === tipoEnvioSeleccionado);
+  // Filtrar destinos por tipo de envío seleccionado (solo para aéreo)
+  const destinosFiltrados = tipoEnvioSeleccionado === 'aereo' 
+    ? destinos.filter(d => d.tipo_envio === 'aereo')
+    : [];
 
   return (
     <div className="min-h-screen bg-white py-8 pt-20">
@@ -562,6 +648,9 @@ ${ventaData.items.map((item, index) => {
                       onChange={() => {
                         setTipoEnvioSeleccionado('terrestre');
                         setDestinoSeleccionado('');
+                        setCiudadSeleccionada('');
+                        setAgenciaSeleccionada('');
+                        setAgencias([]);
                       }}
                     />
                     <span className="ml-2 font-semibold text-gray-800">🚚 Terrestre</span>
@@ -577,6 +666,9 @@ ${ventaData.items.map((item, index) => {
                       onChange={() => {
                         setTipoEnvioSeleccionado('aereo');
                         setDestinoSeleccionado('');
+                        setCiudadSeleccionada('');
+                        setAgenciaSeleccionada('');
+                        setAgencias([]);
                       }}
                     />
                     <span className="ml-2 font-semibold text-gray-800">✈️ Aéreo</span>
@@ -585,24 +677,105 @@ ${ventaData.items.map((item, index) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-2">
-                  📍 Destino de envío *
-                </label>
-                <select
-                  value={destinoSeleccionado}
-                  onChange={(e) => setDestinoSeleccionado(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
-                  required
-                >
-                  <option value="">Selecciona un destino</option>
-                  {destinosFiltrados.map(destino => (
-                    <option key={destino.id} value={destino.id}>
-                      {destino.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Selector diferente según tipo de envío */}
+              {tipoEnvioSeleccionado === 'terrestre' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-800 mb-2">
+                      🏙️ Ciudad de Destino *
+                    </label>
+                    <select
+                      value={ciudadSeleccionada}
+                      onChange={(e) => setCiudadSeleccionada(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
+                      required
+                    >
+                      <option value="">Selecciona una ciudad</option>
+                      {ciudadesConAgencias.map((item, index) => (
+                        <option key={index} value={item.ciudad}>
+                          {item.ciudad} - {item.departamento}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {ciudadSeleccionada && agencias.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-bold text-gray-800 mb-2">
+                        🏢 Agencia de Shalon *
+                      </label>
+                      <select
+                        value={agenciaSeleccionada}
+                        onChange={(e) => setAgenciaSeleccionada(e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
+                        required
+                      >
+                        <option value="">Selecciona una agencia</option>
+                        {agencias.map(agencia => (
+                          <option key={agencia.id} value={agencia.id}>
+                            {agencia.nombre} {agencia.tipo ? `(${agencia.tipo})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      {agenciaSeleccionada && (
+                        <div className="mt-3 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                          {(() => {
+                            const agenciaInfo = agencias.find(a => a.id == agenciaSeleccionada);
+                            return agenciaInfo ? (
+                              <>
+                                <p className="text-sm font-semibold text-gray-800 mb-2">
+                                  📍 <strong>Dirección:</strong>
+                                </p>
+                                <p className="text-sm text-gray-700 mb-2">
+                                  {agenciaInfo.direccion}
+                                </p>
+                                {agenciaInfo.referencia && (
+                                  <>
+                                    <p className="text-sm font-semibold text-gray-800 mb-1">
+                                      📌 <strong>Referencia:</strong>
+                                    </p>
+                                    <p className="text-sm text-gray-700">
+                                      {agenciaInfo.referencia}
+                                    </p>
+                                  </>
+                                )}
+                              </>
+                            ) : null;
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {ciudadSeleccionada && agencias.length === 0 && (
+                    <div className="mt-2 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
+                      <p className="text-sm text-yellow-800">
+                        ⚠️ No hay agencias disponibles para esta ciudad. Por favor, selecciona otra.
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">
+                    📍 Destino de envío *
+                  </label>
+                  <select
+                    value={destinoSeleccionado}
+                    onChange={(e) => setDestinoSeleccionado(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
+                    required
+                  >
+                    <option value="">Selecciona un destino</option>
+                    {destinosFiltrados.map(destino => (
+                      <option key={destino.id} value={destino.id}>
+                        {destino.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
