@@ -11,8 +11,8 @@ class ChatbotService {
     });
     // API Key de Google Gemini (configurar en variables de entorno)
     this.geminiApiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
-    // Usar v1 de la API y modelo gemini-1.5-flash
-    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
+    // Usar v1beta con modelo gemini-pro (formato correcto)
+    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
   }
 
   // Obtener datos reales de la empresa
@@ -494,6 +494,7 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
 
       // Llamar a la API de Gemini
+      // Nota: El endpoint :chat no existe, usar :generateContent pero con estructura correcta
       const response = await fetch(`${this.geminiApiUrl}?key=${this.geminiApiKey}`, {
         method: 'POST',
         headers: {
@@ -502,6 +503,7 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
         body: JSON.stringify({
           contents: [
             {
+              role: 'user',
               parts: [
                 { text: prompt }
               ]
