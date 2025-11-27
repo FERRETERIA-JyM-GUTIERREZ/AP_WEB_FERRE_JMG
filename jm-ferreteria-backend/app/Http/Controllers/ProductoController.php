@@ -348,48 +348,61 @@ class ProductoController extends Controller
                 
                 if ($cloudinaryUrl) {
                     try {
+                        \Log::info('☁️ Intentando subir a Cloudinary...');
+                        
                         // Subir a Cloudinary
                         $uploadResult = Cloudinary::upload($file->getRealPath(), [
-                        'folder' => 'productos',
-                        'public_id' => pathinfo($filename, PATHINFO_FILENAME),
-                        'resource_type' => 'image',
-                    ]);
-                    
-                    $imageUrl = $uploadResult->getSecurePath();
-                    // Guardar la URL completa de Cloudinary para que el frontend la use directamente
-                    $filename = $imageUrl;
-                    
-                    \Log::info('✅ Imagen subida a Cloudinary exitosamente', [
-                        'filename' => $filename,
-                        'url' => $imageUrl
-                    ]);
-                    
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen subida exitosamente',
-                        'data' => [
-                            'filename' => $filename, // URL completa de Cloudinary
-                            'path' => $filename,
-                            'url' => $imageUrl
-                        ]
-                    ]);
-                    } catch (\Exception $e) {
-                        \Log::error('💥 Error al subir a Cloudinary', [
-                            'message' => $e->getMessage(),
-                            'file' => $e->getFile(),
-                            'line' => $e->getLine()
+                            'folder' => 'productos',
+                            'public_id' => pathinfo($filename, PATHINFO_FILENAME),
+                            'resource_type' => 'image',
                         ]);
-                        // Fallback a storage local si Cloudinary falla
-                        $path = $file->storeAs('productos', $filename, 'public');
+                        
+                        $imageUrl = $uploadResult->getSecurePath();
+                        // Guardar la URL completa de Cloudinary para que el frontend la use directamente
+                        $filename = $imageUrl;
+                        
+                        \Log::info('✅ Imagen subida a Cloudinary exitosamente', [
+                            'filename' => $filename,
+                            'url' => $imageUrl
+                        ]);
+                        
                         return response()->json([
                             'success' => true,
-                            'message' => 'Imagen subida localmente (Cloudinary falló)',
+                            'message' => 'Imagen subida exitosamente',
                             'data' => [
-                                'filename' => $filename,
-                                'path' => $path,
-                                'url' => Storage::url($path)
+                                'filename' => $filename, // URL completa de Cloudinary
+                                'path' => $filename,
+                                'url' => $imageUrl
                             ]
                         ]);
+                    } catch (\Exception $e) {
+                        \Log::error('💥 Error al subir a Cloudinary, usando fallback local', [
+                            'message' => $e->getMessage(),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                            'class' => get_class($e)
+                        ]);
+                        
+                        // Fallback a storage local si Cloudinary falla
+                        try {
+                            $path = $file->storeAs('productos', $filename, 'public');
+                            \Log::info('✅ Imagen guardada localmente como fallback');
+                            
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Imagen subida localmente (Cloudinary no disponible)',
+                                'data' => [
+                                    'filename' => $filename,
+                                    'path' => $path,
+                                    'url' => Storage::url($path)
+                                ]
+                            ]);
+                        } catch (\Exception $storageError) {
+                            \Log::error('💥 Error también en storage local', [
+                                'message' => $storageError->getMessage()
+                            ]);
+                            throw $storageError; // Re-lanzar para que se maneje en el catch principal
+                        }
                     }
                 } else {
                     \Log::info('⚠️ Cloudinary no configurado, usando storage local');
@@ -424,18 +437,19 @@ class ProductoController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'class' => get_class($e)
             ]);
             
-            // Retornar mensaje de error más detallado en desarrollo, genérico en producción
-            $errorMessage = config('app.debug') 
-                ? 'Error al subir imagen: ' . $e->getMessage() 
-                : 'Error al subir imagen. Por favor, verifica los logs del servidor.';
+            // Siempre mostrar el mensaje de error para diagnóstico
+            // En producción también mostrar mensaje útil
+            $errorMessage = 'Error al subir imagen: ' . $e->getMessage();
             
             return response()->json([
                 'success' => false,
                 'message' => $errorMessage,
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => $e->getMessage(),
+                'file' => config('app.debug') ? $e->getFile() . ':' . $e->getLine() : null
             ], 500);
         }
     }
