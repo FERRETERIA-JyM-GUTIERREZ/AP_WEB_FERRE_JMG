@@ -593,8 +593,8 @@ ${ventaData.items.map((item, index) => {
     );
   }
 
-  // Filtrar destinos por tipo de envío seleccionado (solo para aéreo)
-  const destinosFiltrados = tipoEnvioSeleccionado === 'aereo' 
+  // Filtrar destinos por tipo de envío seleccionado (solo para Shalon Aéreo)
+  const destinosFiltrados = tipoEnvioSeleccionado === 'shalon_aereo' 
     ? destinos.filter(d => d.tipo_envio === 'aereo')
     : [];
 
