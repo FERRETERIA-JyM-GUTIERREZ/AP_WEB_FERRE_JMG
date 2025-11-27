@@ -6,6 +6,7 @@ use App\Models\Producto;
 use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class ProductoController extends Controller
 {
@@ -315,23 +316,23 @@ class ProductoController extends Controller
                 // Generar nombre único
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
-                // Crear directorio si no existe
-                $uploadPath = public_path('img_productos');
-                if (!file_exists($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
+                // Usar Storage de Laravel para guardar en storage/app/public/productos
+                // Esto es más persistente que public/img_productos
+                $path = $file->storeAs('productos', $filename, 'public');
                 
-                // Mover archivo
-                $file->move($uploadPath, $filename);
-                
-                \Log::info('✅ Imagen subida exitosamente', ['filename' => $filename]);
+                \Log::info('✅ Imagen subida exitosamente', [
+                    'filename' => $filename,
+                    'path' => $path,
+                    'url' => Storage::url($path)
+                ]);
                 
                 return response()->json([
                     'success' => true,
                     'message' => 'Imagen subida exitosamente',
                     'data' => [
                         'filename' => $filename,
-                        'path' => 'img_productos/' . $filename
+                        'path' => $path,
+                        'url' => Storage::url($path)
                     ]
                 ]);
             } else {

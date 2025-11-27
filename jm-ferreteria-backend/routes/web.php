@@ -7,23 +7,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Ruta para servir imágenes de productos
+// Ruta para servir imágenes de productos (compatibilidad con rutas antiguas)
 Route::get('/img_productos/{filename}', function ($filename) {
     // Sanitizar el nombre del archivo para prevenir path traversal
     $filename = basename($filename);
     
-    $path = public_path('img_productos/' . $filename);
-    
-    if (!file_exists($path)) {
-        \Log::warning('Imagen no encontrada', ['path' => $path, 'filename' => $filename]);
-        abort(404, 'Imagen no encontrada');
-    }
-    
-    try {
-        $file = file_get_contents($path);
+    // Primero intentar desde storage (nuevo sistema)
+    $storagePath = 'productos/' . $filename;
+    if (Storage::disk('public')->exists($storagePath)) {
+        $path = Storage::disk('public')->path($storagePath);
         $type = mime_content_type($path);
         
-        // Si no se puede determinar el tipo, usar un tipo genérico
         if (!$type) {
             $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             $typeMap = [
@@ -37,15 +31,36 @@ Route::get('/img_productos/{filename}', function ($filename) {
             $type = $typeMap[$extension] ?? 'application/octet-stream';
         }
         
-        return response($file, 200)
-            ->header('Content-Type', $type)
-            ->header('Cache-Control', 'public, max-age=31536000'); // Cache por 1 año
-    } catch (\Exception $e) {
-        \Log::error('Error al servir imagen', [
-            'path' => $path,
-            'filename' => $filename,
-            'error' => $e->getMessage()
+        return response()->file($path, [
+            'Content-Type' => $type,
+            'Cache-Control' => 'public, max-age=31536000'
         ]);
-        abort(500, 'Error al cargar la imagen');
     }
+    
+    // Fallback: intentar desde public/img_productos (sistema antiguo)
+    $oldPath = public_path('img_productos/' . $filename);
+    if (file_exists($oldPath)) {
+        $type = mime_content_type($oldPath);
+        
+        if (!$type) {
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $typeMap = [
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                'jfif' => 'image/jpeg',
+            ];
+            $type = $typeMap[$extension] ?? 'application/octet-stream';
+        }
+        
+        return response()->file($oldPath, [
+            'Content-Type' => $type,
+            'Cache-Control' => 'public, max-age=31536000'
+        ]);
+    }
+    
+    \Log::warning('Imagen no encontrada', ['filename' => $filename]);
+    abort(404, 'Imagen no encontrada');
 })->where('filename', '.*');
