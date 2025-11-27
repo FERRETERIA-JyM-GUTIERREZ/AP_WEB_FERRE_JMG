@@ -103,6 +103,27 @@ Route::post('/pedidos/publico', [PedidoController::class, 'store']);
 // Rutas de envíos (públicas)
 Route::get('/envios/destinos', [EnvioController::class, 'getDestinos']);
 
+// Ruta temporal para ejecutar seeder de destinos (ELIMINAR DESPUÉS DE USAR)
+Route::get('/seed-destinos/{clave}', function ($clave) {
+    if ($clave !== 'jym2024ferreteria') {
+        return response()->json(['error' => 'Clave incorrecta'], 403);
+    }
+    
+    try {
+        \Artisan::call('db:seed', ['--class' => 'DestinoEnvioSeeder']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Seeder ejecutado correctamente',
+            'output' => \Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al ejecutar seeder: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
 // Búsqueda de clientes por DNI (pública)
 Route::get('/buscar-cliente-por-dni/{dni}', [VentaController::class, 'buscarClientePorDni']);
 
