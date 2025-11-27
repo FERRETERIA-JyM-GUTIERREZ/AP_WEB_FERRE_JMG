@@ -9,6 +9,9 @@ class ChatbotService {
         'Accept': 'application/json',
       }
     });
+    // API Key de Google Gemini (configurar en variables de entorno)
+    this.geminiApiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
+    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
   }
 
   // Obtener datos reales de la empresa
@@ -409,6 +412,141 @@ class ChatbotService {
         break;
       default:
         break;
+    }
+  }
+
+  // Generar contexto para Gemini con información de la empresa
+  generarContextoGemini(datosEmpresa, historialMensajes = []) {
+    const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre}, una ferretería con ${datosEmpresa.añosExperiencia} de experiencia.
+
+INFORMACIÓN DE LA EMPRESA:
+- Nombre: ${datosEmpresa.nombre}
+- Propietario: ${datosEmpresa.propietario}
+- Especialidad: ${datosEmpresa.especialidad}
+
+CONTACTO:
+- Teléfono: ${datosEmpresa.contacto.telefono}
+- WhatsApp: ${datosEmpresa.contacto.whatsapp}
+- Email: ${datosEmpresa.contacto.email}
+
+UBICACIÓN:
+- Dirección: ${datosEmpresa.ubicacion.direccion}
+- ${datosEmpresa.ubicacion.distrito}
+- ${datosEmpresa.ubicacion.ciudad}
+
+HORARIOS:
+- ${datosEmpresa.horarios.semana}
+- ${datosEmpresa.horarios.sabado}
+- ${datosEmpresa.horarios.domingo}
+
+SERVICIOS:
+- Venta de herramientas profesionales, maquinaria industrial y ferretería
+- Asesoramiento técnico
+- Cotizaciones personalizadas
+- Entrega a domicilio en Juliaca y alrededores
+- Entregas a nivel nacional por Shalon
+- Garantía en productos
+- Servicio post-venta
+
+MÉTODOS DE PAGO:
+- Efectivo (Soles y Dólares)
+- Tarjetas (Visa, Mastercard)
+- Transferencias bancarias
+- Yape, Plin, Billetera digital
+
+INSTRUCCIONES:
+1. Responde de forma amigable y profesional
+2. Si el usuario pregunta por productos, sugiere que puede ver el catálogo o contactar al vendedor
+3. Si pregunta por precios, indica que debe contactar al vendedor para cotización
+4. Si pregunta por entregas, menciona las opciones disponibles
+5. Mantén las respuestas concisas pero informativas
+6. Usa emojis de forma moderada
+7. Si no sabes algo, ofrece contactar al vendedor
+
+IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, sugiere contactar al vendedor o usar el menú del chatbot.`;
+
+    return contexto;
+  }
+
+  // Procesar mensaje con Google Gemini AI
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = []) {
+    // Verificar si hay API key configurada
+    if (!this.geminiApiKey || this.geminiApiKey === '') {
+      console.warn('⚠️ Gemini API Key no configurada');
+      return {
+        success: false,
+        error: 'Servicio de IA no configurado. Por favor, use el sistema de menús numerados.'
+      };
+    }
+
+    try {
+      // Generar contexto con información de la empresa
+      const contexto = this.generarContextoGemini(datosEmpresa, historialMensajes);
+      
+      // Construir el historial de conversación para contexto
+      const historialFormateado = historialMensajes.slice(-5).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.text }]
+      }));
+
+      // Preparar el prompt con contexto
+      const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
+
+      // Llamar a la API de Gemini
+      const response = await fetch(`${this.geminiApiUrl}?key=${this.geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error de Gemini API:', errorData);
+        return {
+          success: false,
+          error: 'Error al procesar tu mensaje. Por favor, intenta usar el sistema de menús numerados.'
+        };
+      }
+
+      const data = await response.json();
+      
+      // Extraer la respuesta de Gemini
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        const respuestaTexto = data.candidates[0].content.parts[0].text;
+        
+        return {
+          success: true,
+          text: respuestaTexto,
+          type: 'ai_message'
+        };
+      } else {
+        return {
+          success: false,
+          error: 'No se pudo generar una respuesta. Por favor, intenta usar el sistema de menús numerados.'
+        };
+      }
+    } catch (error) {
+      console.error('Error al llamar a Gemini API:', error);
+      return {
+        success: false,
+        error: 'Error de conexión. Por favor, intenta usar el sistema de menús numerados (escribe un número).'
+      };
     }
   }
 }

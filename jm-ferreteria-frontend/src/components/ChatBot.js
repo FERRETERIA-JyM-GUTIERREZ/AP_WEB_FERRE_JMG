@@ -107,27 +107,68 @@ const ChatBot = () => {
   const processMessage = async (userMessage) => {
     const mensajeLimpio = userMessage.trim();
     
-    // Validar que sea un número
-    if (!esNumeroValido(mensajeLimpio)) {
     setIsTyping(true);
-    setTimeout(() => {
+    
+    // Si NO es un número, usar Gemini AI
+    if (!esNumeroValido(mensajeLimpio)) {
+      try {
+        // Obtener historial reciente para contexto
+        const historialReciente = messages.slice(-10).map(msg => ({
+          sender: msg.sender,
+          text: msg.sender === 'user' ? msg.text : msg.text.replace(/<[^>]*>/g, '') // Remover HTML para contexto
+        }));
+        
+        // Procesar con Gemini
+        const respuestaGemini = await chatbotService.procesarConGemini(
+          mensajeLimpio, 
+          datosEmpresa, 
+          historialReciente
+        );
+        
+        if (respuestaGemini.success) {
+          // Respuesta exitosa de Gemini
+          const botMessage = {
+            id: Date.now() + 1,
+            text: respuestaGemini.text.replace(/\n/g, '<br>'), // Convertir saltos de línea a HTML
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'ai_message',
+            opcionesNumeradas: false
+          };
+          setMessages(prev => [...prev, botMessage]);
+        } else {
+          // Error en Gemini, ofrecer usar menús
+          const errorMessage = {
+            id: Date.now() + 1,
+            text: `🤖 ${respuestaGemini.error || 'No pude procesar tu mensaje.'}<br><br><strong>💡 Puedes usar el sistema de menús:</strong><br><br>1.- 🛍️ Ver productos<br>2.- 📞 Contacto<br>3.- 🕒 Horarios<br>4.- 📍 Ubicación<br>5.- 🚚 Entregas<br>6.- 🛡️ Garantía<br><br><strong>Escriba un número o intente otra pregunta:</strong>`,
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'error',
+            opcionesNumeradas: true
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        }
+      } catch (error) {
+        console.error('Error al procesar con Gemini:', error);
+        // Fallback a menús si hay error
         const errorMessage = chatbotService.generarRespuesta('error_numero', datosEmpresa);
-      const botMessage = {
-        id: Date.now() + 1,
+        const botMessage = {
+          id: Date.now() + 1,
           text: errorMessage.text,
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString(),
+          sender: 'bot',
+          timestamp: new Date().toLocaleTimeString(),
           type: 'error',
           opcionesNumeradas: true
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-      }, 500);
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } finally {
+        setIsTyping(false);
+      }
       return;
     }
 
+    // Si es un número, usar el sistema de menús tradicional
     const numeroSeleccionado = parseInt(mensajeLimpio);
-    setIsTyping(true);
 
     // Procesar según el estado actual
     setTimeout(async () => {
@@ -694,7 +735,7 @@ const ChatBot = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escriba un número para seleccionar..."
+                placeholder="Escriba tu pregunta o un número..."
                 className="flex-1 border-2 border-orange-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm"
                 disabled={isTyping}
               />
@@ -707,7 +748,7 @@ const ChatBot = () => {
               </button>
             </div>
             <p className="text-xs text-gray-600 mt-3 text-center font-medium">
-              💡 Escriba solo números para seleccionar una opción
+              💡 Escriba tu pregunta en texto libre o un número para usar menús
             </p>
           </div>
         </div>
