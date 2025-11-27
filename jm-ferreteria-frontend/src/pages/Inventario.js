@@ -26,6 +26,8 @@ const Inventario = () => {
   const [mostrarFormularioCategoria, setMostrarFormularioCategoria] = useState(false);
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const [savingCategoria, setSavingCategoria] = useState(false);
   const navigate = useNavigate();
   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();
   const { isDarkMode, setIsDarkMode } = useTheme();
@@ -262,6 +264,8 @@ const Inventario = () => {
       return;
     }
     
+    setSavingProduct(true);
+    
     try {
       let productData = { ...form };
       
@@ -276,6 +280,7 @@ const Inventario = () => {
         } else {
           console.log('❌ Error subiendo imagen:', uploadRes.error);
           toast.error('Error al subir la imagen');
+          setSavingProduct(false);
           return;
         }
       } else if (editando) {
@@ -319,6 +324,8 @@ const Inventario = () => {
         status: err.response?.status
       });
       toast.error('Error al guardar producto');
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -354,6 +361,8 @@ const Inventario = () => {
       return;
     }
     
+    setSavingCategoria(true);
+    
     try {
       console.log('📤 Enviando datos al backend...');
       let res;
@@ -387,6 +396,8 @@ const Inventario = () => {
         status: err.response?.status
       });
       toast.error('Error de conexión al guardar la categoría');
+    } finally {
+      setSavingCategoria(false);
     }
   };
 
@@ -797,7 +808,20 @@ const Inventario = () => {
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
             <div className={`rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 w-full max-w-md relative transition-colors max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
-              <button className={`absolute top-2 right-2 transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeModal}>&times;</button>
+              {savingProduct && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <svg className="animate-spin h-8 w-8 text-orange-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {editando ? 'Actualizando producto...' : 'Agregando producto...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <button className={`absolute top-2 right-2 transition-colors z-20 ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeModal} disabled={savingProduct}>&times;</button>
               <h2 className={`text-2xl font-bold mb-4 transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{editando ? 'Editar Producto' : 'Agregar Producto'}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -917,9 +941,24 @@ const Inventario = () => {
                   </button>
                   <button 
                     type="submit" 
-                    className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+                    disabled={savingProduct}
+                    className={`px-4 py-2 rounded transition-colors flex items-center gap-2 ${
+                      savingProduct 
+                        ? 'bg-orange-400 text-white cursor-not-allowed' 
+                        : 'bg-orange-500 text-white hover:bg-orange-600'
+                    }`}
                   >
-                    {editando ? 'Guardar Cambios' : 'Agregar Producto'}
+                    {savingProduct ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{editando ? 'Guardando...' : 'Agregando...'}</span>
+                      </>
+                    ) : (
+                      <span>{editando ? 'Guardar Cambios' : 'Agregar Producto'}</span>
+                    )}
                   </button>
                 </div>
               </form>
@@ -931,7 +970,20 @@ const Inventario = () => {
         {showCategoriaModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
             <div className={`rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 w-full max-w-2xl relative transition-colors max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
-              <button className={`absolute top-2 right-2 transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeCategoriaModal}>&times;</button>
+              {savingCategoria && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <svg className="animate-spin h-8 w-8 text-purple-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {editandoCategoria ? 'Actualizando categoría...' : 'Agregando categoría...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <button className={`absolute top-2 right-2 transition-colors z-20 ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700'}`} onClick={closeCategoriaModal} disabled={savingCategoria}>&times;</button>
               
               {mostrarFormularioCategoria ? (
                 // Formulario para agregar/editar categoría
@@ -971,9 +1023,24 @@ const Inventario = () => {
                       </button>
                       <button 
                         type="submit" 
-                        className="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                        disabled={savingCategoria}
+                        className={`px-4 py-2 rounded transition-colors flex items-center gap-2 ${
+                          savingCategoria 
+                            ? 'bg-purple-400 text-white cursor-not-allowed' 
+                            : 'bg-purple-600 text-white hover:bg-purple-700'
+                        }`}
                       >
-                        {editandoCategoria ? 'Guardar Cambios' : 'Agregar Categoría'}
+                        {savingCategoria ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>{editandoCategoria ? 'Guardando...' : 'Agregando...'}</span>
+                          </>
+                        ) : (
+                          <span>{editandoCategoria ? 'Guardar Cambios' : 'Agregar Categoría'}</span>
+                        )}
                       </button>
                     </div>
                   </form>
