@@ -484,39 +484,49 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       // Generar contexto con información de la empresa
       const contexto = this.generarContextoGemini(datosEmpresa, historialMensajes);
       
-      // Construir el historial de conversación para contexto
-      const historialFormateado = historialMensajes.slice(-5).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      }));
-
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
 
-      // Llamar a la API de Gemini
-      // Nota: El endpoint :chat no existe, usar :generateContent pero con estructura correcta
-      const response = await fetch(`${this.geminiApiUrl}?key=${this.geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: prompt }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        })
-      });
+      // Lista de modelos a probar en orden
+      const modelosAPrueba = [
+        { version: 'v1', model: 'gemini-1.5-flash' },
+        { version: 'v1beta', model: 'gemini-1.5-flash' },
+        { version: 'v1', model: 'gemini-1.5-pro' },
+        { version: 'v1beta', model: 'gemini-1.5-pro' },
+        { version: 'v1beta', model: 'gemini-pro' }
+      ];
+
+      let lastError = null;
+      
+      // Intentar con cada modelo hasta que uno funcione
+      for (const modeloConfig of modelosAPrueba) {
+        const apiUrl = `https://generativelanguage.googleapis.com/${modeloConfig.version}/models/${modeloConfig.model}:generateContent`;
+        
+        console.log(`🔄 Intentando con modelo: ${modeloConfig.model} (${modeloConfig.version})`);
+        
+        try {
+          const response = await fetch(`${apiUrl}?key=${this.geminiApiKey}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [
+                    { text: prompt }
+                  ]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+              }
+            })
+          });
 
       if (!response.ok) {
         const errorData = await response.json();
