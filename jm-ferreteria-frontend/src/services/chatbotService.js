@@ -11,8 +11,8 @@ class ChatbotService {
     });
     // API Key de Google Gemini (configurar en variables de entorno)
     this.geminiApiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
-    // Usar gemini-1.5-flash (más rápido y gratuito) o gemini-1.5-pro (más potente)
-    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+    // Usar v1 de la API y modelo gemini-1.5-flash
+    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent';
   }
 
   // Obtener datos reales de la empresa
@@ -519,9 +519,22 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error de Gemini API:', errorData);
+        console.error('Status:', response.status);
+        console.error('URL:', `${this.geminiApiUrl}?key=${this.geminiApiKey.substring(0, 10)}...`);
+        
+        // Mensaje más específico según el error
+        let errorMessage = 'Error al procesar tu mensaje. Por favor, intenta usar el sistema de menús numerados.';
+        if (response.status === 404) {
+          errorMessage = 'Modelo no encontrado. Verifica que la API de Gemini esté habilitada en Google Cloud Console.';
+        } else if (response.status === 403) {
+          errorMessage = 'Acceso denegado. Verifica que la API key sea correcta y tenga permisos.';
+        } else if (response.status === 400) {
+          errorMessage = 'Solicitud inválida. Verifica la configuración de la API.';
+        }
+        
         return {
           success: false,
-          error: 'Error al procesar tu mensaje. Por favor, intenta usar el sistema de menús numerados.'
+          error: errorMessage
         };
       }
 
