@@ -314,6 +314,15 @@ class ProductoController extends Controller
             if ($request->hasFile('imagen')) {
                 $file = $request->file('imagen');
                 
+                // Validar que el archivo existe y es válido
+                if (!$file || !$file->isValid()) {
+                    \Log::error('❌ Archivo de imagen inválido');
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Archivo de imagen inválido'
+                    ], 400);
+                }
+                
                 // Generar nombre único
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
