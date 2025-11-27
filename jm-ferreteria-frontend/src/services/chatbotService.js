@@ -11,7 +11,8 @@ class ChatbotService {
     });
     // API Key de Google Gemini (configurar en variables de entorno)
     this.geminiApiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
-    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    // Usar gemini-1.5-flash (más rápido y gratuito) o gemini-1.5-pro (más potente)
+    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
   }
 
   // Obtener datos reales de la empresa
