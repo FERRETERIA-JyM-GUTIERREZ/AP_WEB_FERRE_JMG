@@ -11,13 +11,38 @@ const Checkout = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [destinos, setDestinos] = useState([]);
   const [destinoSeleccionado, setDestinoSeleccionado] = useState('');
-  const [tipoEnvioSeleccionado, setTipoEnvioSeleccionado] = useState('terrestre');
+  const [tipoEnvioSeleccionado, setTipoEnvioSeleccionado] = useState('shalon_terrestre');
   
   // Estados para agencias de Shalon (terrestre)
   const [ciudadesConAgencias, setCiudadesConAgencias] = useState([]);
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState('');
   const [agencias, setAgencias] = useState([]);
   const [agenciaSeleccionada, setAgenciaSeleccionada] = useState('');
+  
+  // Estados para Delivery (Juliaca/San Miguel)
+  const [deliveryDestino, setDeliveryDestino] = useState('');
+  const [direccionDelivery, setDireccionDelivery] = useState('');
+  
+  // Estados para Transporte Público (Provincias Puno)
+  const [provinciaPunoSeleccionada, setProvinciaPunoSeleccionada] = useState('');
+  const [direccionTransporte, setDireccionTransporte] = useState('');
+  
+  // Lista de provincias de Puno para transporte público
+  const provinciasPuno = [
+    'Puno',
+    'Azángaro',
+    'Carabaya',
+    'Chucuito',
+    'El Collao',
+    'Huancané',
+    'Lampa',
+    'Melgar',
+    'Moho',
+    'San Antonio de Putina',
+    'San Román',
+    'Sandia',
+    'Yunguyo'
+  ];
   
   const [datosEnvio, setDatosEnvio] = useState({
     nombre: '',
@@ -64,9 +89,9 @@ const Checkout = () => {
     }
   };
 
-  // Cargar agencias cuando se selecciona una ciudad
+  // Cargar agencias cuando se selecciona una ciudad (solo para Shalon Terrestre)
   useEffect(() => {
-    if (tipoEnvioSeleccionado === 'terrestre' && ciudadSeleccionada) {
+    if (tipoEnvioSeleccionado === 'shalon_terrestre' && ciudadSeleccionada) {
       fetchAgenciasPorCiudad(ciudadSeleccionada);
     } else {
       setAgencias([]);
@@ -182,16 +207,24 @@ const Checkout = () => {
     }
 
     // Validar según tipo de envío
-    if (tipoEnvioSeleccionado === 'terrestre') {
+    if (tipoEnvioSeleccionado === 'shalon_terrestre') {
       if (!ciudadSeleccionada || ciudadSeleccionada === '') {
         camposFaltantes.push('Ciudad de destino');
       }
       if (!agenciaSeleccionada || agenciaSeleccionada === '') {
         camposFaltantes.push('Agencia de Shalon');
       }
-    } else {
+    } else if (tipoEnvioSeleccionado === 'shalon_aereo') {
       if (!destinoSeleccionado || destinoSeleccionado === '') {
         camposFaltantes.push('Destino de envío');
+      }
+    } else if (tipoEnvioSeleccionado === 'delivery') {
+      if (!deliveryDestino || deliveryDestino === '') {
+        camposFaltantes.push('Destino de delivery');
+      }
+    } else if (tipoEnvioSeleccionado === 'transporte_publico') {
+      if (!provinciaPunoSeleccionada || provinciaPunoSeleccionada === '') {
+        camposFaltantes.push('Provincia de Puno');
       }
     }
 
@@ -452,7 +485,7 @@ Por favor, confirma disponibilidad y costo de envío.`;
     
     // Construir información de envío según tipo
     let infoEnvio = '';
-    if (tipoEnvioSeleccionado === 'terrestre') {
+    if (tipoEnvioSeleccionado === 'shalon_terrestre') {
       const agenciaInfo = agencias.find(a => a.id == agenciaSeleccionada);
       if (agenciaInfo) {
         infoEnvio = `🚚 *DATOS DE ENVÍO:*
@@ -466,11 +499,21 @@ ${agenciaInfo.referencia ? `• *Referencia:* ${agenciaInfo.referencia}` : ''}`;
 • *Tipo:* Terrestre (Shalon)
 • *Ciudad:* ${ciudadSeleccionada || 'Por definir'}`;
       }
-    } else {
+    } else if (tipoEnvioSeleccionado === 'shalon_aereo') {
       const destino = getDestinoInfo();
       infoEnvio = `✈️ *DATOS DE ENVÍO:*
-• *Tipo:* Aéreo
+• *Tipo:* Aéreo (Shalon)
 • *Destino:* ${destino?.nombre || 'Por definir'}`;
+    } else if (tipoEnvioSeleccionado === 'delivery') {
+      infoEnvio = `🏠 *DATOS DE ENVÍO:*
+• *Tipo:* Delivery Local
+• *Destino:* ${deliveryDestino}
+• *Nota:* Entrega a domicilio en ${deliveryDestino}. El lugar exacto se solicitará internamente.`;
+    } else if (tipoEnvioSeleccionado === 'transporte_publico') {
+      infoEnvio = `🚌 *DATOS DE ENVÍO:*
+• *Tipo:* Transporte Público (Puno)
+• *Provincia:* ${provinciaPunoSeleccionada}
+• *Nota:* Envío mediante transporte público a ${provinciaPunoSeleccionada}. Retiro en terminal de transportes.`;
     }
     
     return `🛒 *NUEVA COMPRA - J&M GUTIÉRREZ*
@@ -644,48 +687,112 @@ ${ventaData.items.map((item, index) => {
                 <label className="block text-sm font-bold text-gray-800 mb-3">
                   🚚 Tipo de Envío *
                 </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-emerald-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'terrestre' ? '#10b981' : '#d1d5db'}}>
-                    <input
-                      type="radio"
-                      className="form-radio text-emerald-600 w-4 h-4"
-                      name="tipoEnvio"
-                      value="terrestre"
-                      checked={tipoEnvioSeleccionado === 'terrestre'}
-                      onChange={() => {
-                        setTipoEnvioSeleccionado('terrestre');
-                        setDestinoSeleccionado('');
-                        setCiudadSeleccionada('');
-                        setAgenciaSeleccionada('');
-                        setAgencias([]);
-                      }}
-                    />
-                    <span className="ml-2 font-semibold text-gray-800">🚚 Terrestre</span>
-                    <span className="ml-auto text-xs text-gray-600">Económico</span>
-                  </label>
-                  <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-sky-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'aereo' ? '#0ea5e9' : '#d1d5db'}}>
-                    <input
-                      type="radio"
-                      className="form-radio text-sky-600 w-4 h-4"
-                      name="tipoEnvio"
-                      value="aereo"
-                      checked={tipoEnvioSeleccionado === 'aereo'}
-                      onChange={() => {
-                        setTipoEnvioSeleccionado('aereo');
-                        setDestinoSeleccionado('');
-                        setCiudadSeleccionada('');
-                        setAgenciaSeleccionada('');
-                        setAgencias([]);
-                      }}
-                    />
-                    <span className="ml-2 font-semibold text-gray-800">✈️ Aéreo</span>
-                    <span className="ml-auto text-xs text-gray-600">Rápido</span>
-                  </label>
+                
+                {/* Grupo 1: Shalon */}
+                <div className="mb-4">
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">Grupo 1: Shalon</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-emerald-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'shalon_terrestre' ? '#10b981' : '#d1d5db'}}>
+                      <input
+                        type="radio"
+                        className="form-radio text-emerald-600 w-4 h-4"
+                        name="tipoEnvio"
+                        value="shalon_terrestre"
+                        checked={tipoEnvioSeleccionado === 'shalon_terrestre'}
+                        onChange={() => {
+                          setTipoEnvioSeleccionado('shalon_terrestre');
+                          setDestinoSeleccionado('');
+                          setCiudadSeleccionada('');
+                          setAgenciaSeleccionada('');
+                          setAgencias([]);
+                          setDeliveryDestino('');
+                          setDireccionDelivery('');
+                          setProvinciaPunoSeleccionada('');
+                          setDireccionTransporte('');
+                        }}
+                      />
+                      <span className="ml-2 font-semibold text-gray-800">🚚 Shalon Terrestre</span>
+                      <span className="ml-auto text-xs text-gray-600">Agencias</span>
+                    </label>
+                    <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-sky-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'shalon_aereo' ? '#0ea5e9' : '#d1d5db'}}>
+                      <input
+                        type="radio"
+                        className="form-radio text-sky-600 w-4 h-4"
+                        name="tipoEnvio"
+                        value="shalon_aereo"
+                        checked={tipoEnvioSeleccionado === 'shalon_aereo'}
+                        onChange={() => {
+                          setTipoEnvioSeleccionado('shalon_aereo');
+                          setDestinoSeleccionado('');
+                          setCiudadSeleccionada('');
+                          setAgenciaSeleccionada('');
+                          setAgencias([]);
+                          setDeliveryDestino('');
+                          setDireccionDelivery('');
+                          setProvinciaPunoSeleccionada('');
+                          setDireccionTransporte('');
+                        }}
+                      />
+                      <span className="ml-2 font-semibold text-gray-800">✈️ Shalon Aéreo</span>
+                      <span className="ml-auto text-xs text-gray-600">Directo</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Grupo 2: Puno Local */}
+                <div>
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">Grupo 2: Puno Local</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-purple-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'delivery' ? '#a855f7' : '#d1d5db'}}>
+                      <input
+                        type="radio"
+                        className="form-radio text-purple-600 w-4 h-4"
+                        name="tipoEnvio"
+                        value="delivery"
+                        checked={tipoEnvioSeleccionado === 'delivery'}
+                        onChange={() => {
+                          setTipoEnvioSeleccionado('delivery');
+                          setDestinoSeleccionado('');
+                          setCiudadSeleccionada('');
+                          setAgenciaSeleccionada('');
+                          setAgencias([]);
+                          setDeliveryDestino('');
+                          setDireccionDelivery('');
+                          setProvinciaPunoSeleccionada('');
+                          setDireccionTransporte('');
+                        }}
+                      />
+                      <span className="ml-2 font-semibold text-gray-800">🏠 Delivery</span>
+                      <span className="ml-auto text-xs text-gray-600">Juliaca/S.Miguel</span>
+                    </label>
+                    <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-orange-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'transporte_publico' ? '#fb923c' : '#d1d5db'}}>
+                      <input
+                        type="radio"
+                        className="form-radio text-orange-600 w-4 h-4"
+                        name="tipoEnvio"
+                        value="transporte_publico"
+                        checked={tipoEnvioSeleccionado === 'transporte_publico'}
+                        onChange={() => {
+                          setTipoEnvioSeleccionado('transporte_publico');
+                          setDestinoSeleccionado('');
+                          setCiudadSeleccionada('');
+                          setAgenciaSeleccionada('');
+                          setAgencias([]);
+                          setDeliveryDestino('');
+                          setDireccionDelivery('');
+                          setProvinciaPunoSeleccionada('');
+                          setDireccionTransporte('');
+                        }}
+                      />
+                      <span className="ml-2 font-semibold text-gray-800">🚌 Transporte</span>
+                      <span className="ml-auto text-xs text-gray-600">Provincias Puno</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
               {/* Selector diferente según tipo de envío */}
-              {tipoEnvioSeleccionado === 'terrestre' ? (
+              {tipoEnvioSeleccionado === 'shalon_terrestre' ? (
                 <>
                   <div>
                     <label className="block text-sm font-bold text-gray-800 mb-2">
@@ -773,7 +880,7 @@ ${ventaData.items.map((item, index) => {
                     </div>
                   )}
                 </>
-              ) : (
+              ) : tipoEnvioSeleccionado === 'shalon_aereo' ? (
                 <div>
                   <label className="block text-sm font-bold text-gray-800 mb-2">
                     📍 Destino de envío *
@@ -792,7 +899,48 @@ ${ventaData.items.map((item, index) => {
                     ))}
                   </select>
                 </div>
-              )}
+              ) : tipoEnvioSeleccionado === 'delivery' ? (
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">
+                    🏠 Destino de Delivery *
+                  </label>
+                  <select
+                    value={deliveryDestino}
+                    onChange={(e) => setDeliveryDestino(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
+                    required
+                  >
+                    <option value="">Selecciona un destino</option>
+                    <option value="Juliaca">Juliaca</option>
+                    <option value="San Miguel">San Miguel</option>
+                  </select>
+                  <p className="mt-2 text-sm text-gray-600">
+                    ℹ️ El lugar exacto de entrega se solicitará internamente.
+                  </p>
+                </div>
+              ) : tipoEnvioSeleccionado === 'transporte_publico' ? (
+                <div>
+                  <label className="block text-sm font-bold text-gray-800 mb-2">
+                    🚌 Provincia de Puno *
+                  </label>
+                  <select
+                    value={provinciaPunoSeleccionada}
+                    onChange={(e) => setProvinciaPunoSeleccionada(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-semibold text-gray-800 bg-white hover:border-indigo-300"
+                    required
+                  >
+                    <option value="">Selecciona una provincia</option>
+                    {provinciasPuno.map((provincia, index) => (
+                      <option key={index} value={provincia}>
+                        {provincia}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-sm text-gray-600">
+                    ℹ️ El envío se realizará mediante transporte público. Retiro en terminal de transportes.
+                  </p>
+                </div>
+              ) : null}
             </div>
           </div>
 
