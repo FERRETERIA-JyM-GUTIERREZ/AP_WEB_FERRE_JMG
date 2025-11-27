@@ -411,7 +411,7 @@ class AgenciaEnvioSeeder extends Seeder
                 'tipo' => $agencia['tipo'] ?? null,
                 'telefono' => null,
                 'horarios' => 'Lunes a sábado de 8:00 A.m A 8:00 p.m',
-                'transportista' => 'Shalon',
+                'transportista' => 'Shalom',
                 'activo' => true
             ]);
         }

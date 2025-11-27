@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('tipo')->nullable(); // Grande/Co, Pequeña, Mediana, Micro, Terminal, Mini-micro
             $table->string('telefono')->nullable();
             $table->text('horarios')->nullable();
-            $table->string('transportista')->default('Shalon'); // Para futuras expansiones
+            $table->string('transportista')->default('Shalom'); // Para futuras expansiones
             $table->boolean('activo')->default(true);
             $table->timestamps();
             

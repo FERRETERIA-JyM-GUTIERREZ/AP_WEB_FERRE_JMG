@@ -176,7 +176,7 @@ class EnvioController extends Controller
     public function getAgencias(Request $request)
     {
         try {
-            $query = AgenciaEnvio::activas()->porTransportista('Shalon');
+            $query = AgenciaEnvio::activas()->porTransportista('Shalom');
             
             // Filtrar por ciudad si se proporciona
             if ($request->has('ciudad')) {
@@ -210,7 +210,7 @@ class EnvioController extends Controller
     {
         try {
             $agencias = AgenciaEnvio::activas()
-                ->porTransportista('Shalon')
+                ->porTransportista('Shalom')
                 ->porCiudad($ciudad)
                 ->orderBy('nombre')
                 ->get();
@@ -235,7 +235,7 @@ class EnvioController extends Controller
     {
         try {
             $ciudades = AgenciaEnvio::activas()
-                ->porTransportista('Shalon')
+                ->porTransportista('Shalom')
                 ->select('ciudad', 'departamento')
                 ->distinct()
                 ->orderBy('departamento')

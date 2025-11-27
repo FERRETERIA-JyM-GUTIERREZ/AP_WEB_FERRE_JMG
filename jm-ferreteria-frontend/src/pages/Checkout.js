@@ -13,7 +13,7 @@ const Checkout = () => {
   const [destinoSeleccionado, setDestinoSeleccionado] = useState('');
   const [tipoEnvioSeleccionado, setTipoEnvioSeleccionado] = useState('shalon_terrestre');
   
-  // Estados para agencias de Shalon (terrestre)
+  // Estados para agencias de Shalom (terrestre)
   const [ciudadesConAgencias, setCiudadesConAgencias] = useState([]);
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState('');
   const [agencias, setAgencias] = useState([]);
@@ -47,8 +47,7 @@ const Checkout = () => {
   const [datosEnvio, setDatosEnvio] = useState({
     nombre: '',
     telefono: '',
-    dni: '',
-    ciudad: ''
+    dni: ''
   });
   const { user, isAuthenticated } = useAuth();
   const { cart, clearCart } = useCart();
@@ -60,7 +59,7 @@ const Checkout = () => {
       return;
     }
     fetchDestinos();
-    fetchCiudadesConAgencias(); // Cargar ciudades con agencias de Shalon
+    fetchCiudadesConAgencias(); // Cargar ciudades con agencias de Shalom
     if (user) {
       setDatosEnvio(prev => ({
         ...prev,
@@ -70,7 +69,7 @@ const Checkout = () => {
     }
   }, []);
 
-  // Cargar ciudades con agencias de Shalon
+  // Cargar ciudades con agencias de Shalom
   const fetchCiudadesConAgencias = async () => {
     try {
       const response = await api.get('/envios/ciudades');
@@ -89,7 +88,7 @@ const Checkout = () => {
     }
   };
 
-  // Cargar agencias cuando se selecciona una ciudad (solo para Shalon Terrestre)
+  // Cargar agencias cuando se selecciona una ciudad (solo para Shalom Terrestre)
   useEffect(() => {
     if (tipoEnvioSeleccionado === 'shalon_terrestre' && ciudadSeleccionada) {
       fetchAgenciasPorCiudad(ciudadSeleccionada);
@@ -202,17 +201,13 @@ const Checkout = () => {
       return;
     }
     
-    if (!datosEnvio.ciudad || !datosEnvio.ciudad.trim()) {
-      camposFaltantes.push('Ciudad');
-    }
-
     // Validar según tipo de envío
     if (tipoEnvioSeleccionado === 'shalon_terrestre') {
       if (!ciudadSeleccionada || ciudadSeleccionada === '') {
         camposFaltantes.push('Ciudad de destino');
       }
       if (!agenciaSeleccionada || agenciaSeleccionada === '') {
-        camposFaltantes.push('Agencia de Shalon');
+        camposFaltantes.push('Agencia de Shalom');
       }
     } else if (tipoEnvioSeleccionado === 'shalon_aereo') {
       if (!destinoSeleccionado || destinoSeleccionado === '') {
@@ -394,7 +389,6 @@ const Checkout = () => {
 • *Nombre:* ${datosEnvio.nombre}
 • *Teléfono:* ${datosEnvio.telefono}
 ${datosEnvio.dni && datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
-• *Ciudad:* ${datosEnvio.ciudad}
 
 🛍️ *PRODUCTOS SOLICITADOS:*
 ${cart.map((item, index) => {
@@ -489,20 +483,20 @@ Por favor, confirma disponibilidad y costo de envío.`;
       const agenciaInfo = agencias.find(a => a.id == agenciaSeleccionada);
       if (agenciaInfo) {
         infoEnvio = `🚚 *DATOS DE ENVÍO:*
-• *Tipo:* Terrestre (Shalon)
+• *Tipo:* Terrestre (Shalom)
 • *Ciudad:* ${ciudadSeleccionada}
 • *Agencia:* ${agenciaInfo.nombre}
 • *Dirección:* ${agenciaInfo.direccion}
 ${agenciaInfo.referencia ? `• *Referencia:* ${agenciaInfo.referencia}` : ''}`;
       } else {
         infoEnvio = `🚚 *DATOS DE ENVÍO:*
-• *Tipo:* Terrestre (Shalon)
+• *Tipo:* Terrestre (Shalom)
 • *Ciudad:* ${ciudadSeleccionada || 'Por definir'}`;
       }
     } else if (tipoEnvioSeleccionado === 'shalon_aereo') {
       const destino = getDestinoInfo();
       infoEnvio = `✈️ *DATOS DE ENVÍO:*
-• *Tipo:* Aéreo (Shalon)
+• *Tipo:* Aéreo (Shalom)
 • *Destino:* ${destino?.nombre || 'Por definir'}`;
     } else if (tipoEnvioSeleccionado === 'delivery') {
       infoEnvio = `🏠 *DATOS DE ENVÍO:*
@@ -525,7 +519,6 @@ ${agenciaInfo.referencia ? `• *Referencia:* ${agenciaInfo.referencia}` : ''}`;
 • *Nombre:* ${datosEnvio.nombre}
 • *Teléfono:* ${datosEnvio.telefono}
 ${datosEnvio.dni && datosEnvio.dni.trim() ? `• *DNI:* ${datosEnvio.dni}` : '• *DNI:* No proporcionado'}
-• *Ciudad:* ${datosEnvio.ciudad}
 
 ${infoEnvio}
 
@@ -593,7 +586,7 @@ ${ventaData.items.map((item, index) => {
     );
   }
 
-  // Filtrar destinos por tipo de envío seleccionado (solo para Shalon Aéreo)
+  // Filtrar destinos por tipo de envío seleccionado (solo para Shalom Aéreo)
   const destinosFiltrados = tipoEnvioSeleccionado === 'shalon_aereo' 
     ? destinos.filter(d => d.tipo_envio === 'aereo')
     : [];
@@ -660,26 +653,12 @@ ${ventaData.items.map((item, index) => {
                   maxLength="8"
                   placeholder="12345678 (Opcional)"
                 />
+                <p className="text-xs text-gray-600 mt-1">
+                  ℹ️ Opcional. Obligatorio para envíos por Shalom.
+                </p>
                 {datosEnvio.dni && datosEnvio.dni.length !== 8 && (
                   <p className="text-sm text-red-500 mt-1">El DNI debe tener exactamente 8 dígitos o dejarlo vacío</p>
                 )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="text-red-500">*</span> Ciudad
-                </label>
-                <input
-                  type="text"
-                  name="ciudad"
-                  value={datosEnvio.ciudad}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all ${
-                    datosEnvio.ciudad.trim() ? 'border-emerald-300 bg-emerald-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Ej: Lima, Arequipa, Trujillo"
-                  required
-                />
               </div>
 
               {/* Selector de tipo de envío */}
@@ -688,9 +667,9 @@ ${ventaData.items.map((item, index) => {
                   🚚 Tipo de Envío *
                 </label>
                 
-                {/* Grupo 1: Shalon */}
+                {/* Grupo 1: Shalom */}
                 <div className="mb-4">
-                  <p className="text-xs text-gray-600 mb-2 font-semibold">Grupo 1: Shalon</p>
+                  <p className="text-xs text-gray-600 mb-2 font-semibold">Grupo 1: Shalom</p>
                   <div className="grid grid-cols-2 gap-3">
                     <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-emerald-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'shalon_terrestre' ? '#10b981' : '#d1d5db'}}>
                       <input
@@ -711,7 +690,7 @@ ${ventaData.items.map((item, index) => {
                           setDireccionTransporte('');
                         }}
                       />
-                      <span className="ml-2 font-semibold text-gray-800">🚚 Shalon Terrestre</span>
+                      <span className="ml-2 font-semibold text-gray-800">🚚 Shalom Terrestre</span>
                       <span className="ml-auto text-xs text-gray-600">Agencias</span>
                     </label>
                     <label className="relative flex items-center p-3 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-sky-400 transition-all" style={{borderColor: tipoEnvioSeleccionado === 'shalon_aereo' ? '#0ea5e9' : '#d1d5db'}}>
@@ -733,7 +712,7 @@ ${ventaData.items.map((item, index) => {
                           setDireccionTransporte('');
                         }}
                       />
-                      <span className="ml-2 font-semibold text-gray-800">✈️ Shalon Aéreo</span>
+                      <span className="ml-2 font-semibold text-gray-800">✈️ Shalom Aéreo</span>
                       <span className="ml-auto text-xs text-gray-600">Directo</span>
                     </label>
                   </div>
@@ -818,7 +797,7 @@ ${ventaData.items.map((item, index) => {
                     </select>
                     {ciudadesConAgencias.length === 0 && (
                       <p className="mt-2 text-sm text-yellow-600">
-                        ⚠️ No hay ciudades disponibles. Asegúrate de que las agencias de Shalon estén cargadas en la base de datos.
+                        ⚠️ No hay ciudades disponibles. Asegúrate de que las agencias de Shalom estén cargadas en la base de datos.
                       </p>
                     )}
                   </div>
@@ -826,7 +805,7 @@ ${ventaData.items.map((item, index) => {
                   {ciudadSeleccionada && agencias.length > 0 && (
                     <div>
                       <label className="block text-sm font-bold text-gray-800 mb-2">
-                        🏢 Agencia de Shalon *
+                        🏢 Agencia de Shalom *
                       </label>
                       <select
                         value={agenciaSeleccionada}

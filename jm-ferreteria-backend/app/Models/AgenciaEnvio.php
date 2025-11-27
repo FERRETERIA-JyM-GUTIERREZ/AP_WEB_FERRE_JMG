@@ -55,7 +55,7 @@ class AgenciaEnvio extends Model
     /**
      * Scope para filtrar por transportista
      */
-    public function scopePorTransportista($query, $transportista = 'Shalon')
+    public function scopePorTransportista($query, $transportista = 'Shalom')
     {
         return $query->where('transportista', $transportista);
     }
