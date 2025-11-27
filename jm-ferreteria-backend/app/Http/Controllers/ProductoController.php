@@ -347,10 +347,12 @@ class ProductoController extends Controller
                 }
                 
                 if ($cloudinaryUrl) {
+                    // Intentar usar Cloudinary, pero capturar cualquier error de inicialización
                     try {
                         \Log::info('☁️ Intentando subir a Cloudinary...');
                         
                         // Subir a Cloudinary
+                        // Nota: Si CloudinaryEngine no está correctamente configurado, esto lanzará un error
                         $uploadResult = Cloudinary::upload($file->getRealPath(), [
                             'folder' => 'productos',
                             'public_id' => pathinfo($filename, PATHINFO_FILENAME),
@@ -373,6 +375,27 @@ class ProductoController extends Controller
                                 'filename' => $filename, // URL completa de Cloudinary
                                 'path' => $filename,
                                 'url' => $imageUrl
+                            ]
+                        ]);
+                    } catch (\TypeError $typeError) {
+                        // Capturar específicamente el error de tipo (Cannot assign null to property)
+                        \Log::error('💥 Error de configuración de Cloudinary (TypeError), usando fallback local', [
+                            'message' => $typeError->getMessage(),
+                            'file' => $typeError->getFile(),
+                            'line' => $typeError->getLine()
+                        ]);
+                        
+                        // Fallback a storage local
+                        $path = $file->storeAs('productos', $filename, 'public');
+                        \Log::info('✅ Imagen guardada localmente como fallback (Cloudinary no configurado correctamente)');
+                        
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Imagen subida localmente (Cloudinary requiere configuración adicional)',
+                            'data' => [
+                                'filename' => $filename,
+                                'path' => $path,
+                                'url' => Storage::url($path)
                             ]
                         ]);
                     } catch (\Exception $e) {
