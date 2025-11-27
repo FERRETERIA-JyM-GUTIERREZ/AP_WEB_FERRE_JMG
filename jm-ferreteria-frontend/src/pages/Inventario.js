@@ -28,7 +28,21 @@ const Inventario = () => {
   const [imagenPreview, setImagenPreview] = useState(null);
   const navigate = useNavigate();
   const { user, isAuthenticated, hasPermission, canManageInventory } = useAuth();
-  const { isDarkMode } = useTheme();
+  const { isDarkMode, setIsDarkMode } = useTheme();
+
+  // Forzar modo oscuro por defecto en gestión de inventario
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('inventario_theme');
+    if (savedTheme === null) {
+      // Si no hay preferencia guardada para inventario, usar modo oscuro por defecto
+      setIsDarkMode(true);
+      localStorage.setItem('inventario_theme', 'dark');
+    } else if (savedTheme === 'dark') {
+      setIsDarkMode(true);
+    } else {
+      setIsDarkMode(false);
+    }
+  }, [setIsDarkMode]);
 
   // Validar acceso con sistema de permisos
   useEffect(() => {
@@ -123,7 +137,11 @@ const Inventario = () => {
   const openModal = (producto = null) => {
     if (producto) {
       setEditando(producto.id);
-      setForm({ ...producto });
+      // Asegurarse de preservar la imagen original del producto
+      setForm({ 
+        ...producto, 
+        imagen: producto.imagen || '' // Asegurar que imagen siempre tenga un valor
+      });
       // Si el producto tiene imagen existente, mostrar preview
       if (producto.imagen) {
         setImagenPreview(`${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
@@ -177,7 +195,15 @@ const Inventario = () => {
   const removeImage = () => {
     setImagenSeleccionada(null);
     setImagenPreview(null);
-    setForm({ ...form, imagen: '' });
+    // Solo limpiar la imagen del formulario si NO estamos editando
+    // Si estamos editando, mantener la imagen original en el formulario
+    if (!editando) {
+      setForm({ ...form, imagen: '' });
+    }
+    // Si estamos editando y removemos la preview, restaurar la imagen original
+    if (editando && form.imagen) {
+      setImagenPreview(`${getBackendBaseUrl()}/img_productos/${form.imagen}`);
+    }
   };
 
   // Modal de categorías: abrir para agregar o editar
@@ -241,12 +267,14 @@ const Inventario = () => {
           return;
         }
       } else if (editando) {
-        // Si estamos editando y NO hay nueva imagen, preservar la imagen existente
-        // Asegurarse de que productData.imagen tenga el valor del producto original
-        if (!productData.imagen && form.imagen) {
+        // Si estamos editando y NO hay nueva imagen, SIEMPRE preservar la imagen existente
+        // Asegurarse de que productData.imagen tenga el valor del formulario (que viene del producto original)
+        if (form.imagen) {
           productData.imagen = form.imagen;
+          console.log('💾 Preservando imagen existente:', productData.imagen);
+        } else {
+          console.log('⚠️ No hay imagen para preservar en el formulario');
         }
-        console.log('💾 Preservando imagen existente:', productData.imagen);
       }
       
       console.log('💾 Guardando producto:', productData);
