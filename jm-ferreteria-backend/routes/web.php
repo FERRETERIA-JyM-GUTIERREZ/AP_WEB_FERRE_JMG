@@ -8,11 +8,30 @@ Route::get('/', function () {
 });
 
 // Ruta para servir imágenes de productos (compatibilidad con rutas antiguas)
+// Si la imagen está en Cloudinary, se redirige automáticamente
 Route::get('/img_productos/{filename}', function ($filename) {
     // Sanitizar el nombre del archivo para prevenir path traversal
     $filename = basename($filename);
     
-    // Primero intentar desde storage (nuevo sistema)
+    // Si Cloudinary está configurado y la imagen viene de ahí, redirigir
+    // (Las imágenes de Cloudinary tienen formato: productos/xxxxx.jpg)
+    if (config('cloudinary.cloud_url')) {
+        // Intentar construir URL de Cloudinary
+        $cloudName = config('cloudinary.cloud_name');
+        if ($cloudName) {
+            // Si el filename parece ser de Cloudinary (contiene productos/)
+            if (strpos($filename, 'productos/') !== false || strpos($filename, 'http') !== false) {
+                // Ya es una URL completa, redirigir
+                return redirect($filename, 301);
+            }
+            // Construir URL de Cloudinary
+            $cloudinaryUrl = "https://res.cloudinary.com/{$cloudName}/image/upload/productos/{$filename}";
+            // Verificar si existe (opcional, puede ser costoso)
+            return redirect($cloudinaryUrl, 301);
+        }
+    }
+    
+    // Primero intentar desde storage (nuevo sistema local)
     $storagePath = 'productos/' . $filename;
     if (Storage::disk('public')->exists($storagePath)) {
         $path = Storage::disk('public')->path($storagePath);

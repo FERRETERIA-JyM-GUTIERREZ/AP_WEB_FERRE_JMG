@@ -7,6 +7,7 @@ use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProductoController extends Controller
 {
@@ -316,25 +317,52 @@ class ProductoController extends Controller
                 // Generar nombre único
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
                 
-                // Usar Storage de Laravel para guardar en storage/app/public/productos
-                // Esto es más persistente que public/img_productos
-                $path = $file->storeAs('productos', $filename, 'public');
-                
-                \Log::info('✅ Imagen subida exitosamente', [
-                    'filename' => $filename,
-                    'path' => $path,
-                    'url' => Storage::url($path)
-                ]);
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Imagen subida exitosamente',
-                    'data' => [
+                // Intentar usar Cloudinary si está configurado, sino usar Storage local
+                if (config('cloudinary.cloud_url')) {
+                    // Subir a Cloudinary
+                    $uploadResult = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => 'productos',
+                        'public_id' => pathinfo($filename, PATHINFO_FILENAME),
+                        'resource_type' => 'image',
+                    ]);
+                    
+                    $filename = basename($uploadResult->getSecurePath());
+                    $imageUrl = $uploadResult->getSecurePath();
+                    
+                    \Log::info('✅ Imagen subida a Cloudinary exitosamente', [
+                        'filename' => $filename,
+                        'url' => $imageUrl
+                    ]);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen subida exitosamente',
+                        'data' => [
+                            'filename' => $filename,
+                            'path' => $filename,
+                            'url' => $imageUrl
+                        ]
+                    ]);
+                } else {
+                    // Fallback: Usar Storage de Laravel local
+                    $path = $file->storeAs('productos', $filename, 'public');
+                    
+                    \Log::info('✅ Imagen subida localmente exitosamente', [
                         'filename' => $filename,
                         'path' => $path,
                         'url' => Storage::url($path)
-                    ]
-                ]);
+                    ]);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen subida exitosamente',
+                        'data' => [
+                            'filename' => $filename,
+                            'path' => $path,
+                            'url' => Storage::url($path)
+                        ]
+                    ]);
+                }
             } else {
                 \Log::error('❌ No se encontró archivo de imagen');
                 return response()->json([
