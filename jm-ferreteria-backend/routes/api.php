@@ -124,16 +124,50 @@ Route::get('/setup-agencias/{clave}', function ($clave) {
         ]);
         $seedOutput = \Artisan::output();
         
+        // Verificar cuántas agencias se insertaron
+        $totalAgencias = \App\Models\AgenciaEnvio::count();
+        $totalCiudades = \App\Models\AgenciaEnvio::select('ciudad')->distinct()->count();
+        
         return response()->json([
             'success' => true,
             'message' => 'Migración y seeder ejecutados correctamente',
             'migration_output' => $migrateOutput,
-            'seed_output' => $seedOutput
+            'seed_output' => $seedOutput,
+            'total_agencias' => $totalAgencias,
+            'total_ciudades' => $totalCiudades
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
             'message' => 'Error al ejecutar: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
+// Ruta temporal para verificar agencias (ELIMINAR DESPUÉS DE USAR)
+Route::get('/verificar-agencias/{clave}', function ($clave) {
+    if ($clave !== 'jym2024ferreteria') {
+        return response()->json(['error' => 'Clave incorrecta'], 403);
+    }
+    
+    try {
+        $totalAgencias = \App\Models\AgenciaEnvio::count();
+        $totalCiudades = \App\Models\AgenciaEnvio::select('ciudad')->distinct()->count();
+        $primerasAgencias = \App\Models\AgenciaEnvio::limit(5)->get();
+        $primerasCiudades = \App\Models\AgenciaEnvio::select('ciudad', 'departamento')->distinct()->limit(10)->get();
+        
+        return response()->json([
+            'success' => true,
+            'total_agencias' => $totalAgencias,
+            'total_ciudades' => $totalCiudades,
+            'primeras_agencias' => $primerasAgencias,
+            'primeras_ciudades' => $primerasCiudades
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
             'trace' => $e->getTraceAsString()
         ], 500);
     }
