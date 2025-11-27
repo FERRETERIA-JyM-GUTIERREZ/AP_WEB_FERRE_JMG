@@ -487,13 +487,13 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
 
-      // Lista de modelos a probar en orden
+      // Lista de modelos a probar en orden de preferencia
+      // IMPORTANTE: Gemini Flash solo está disponible en v1beta, NO en v1
       const modelosAPrueba = [
-        { version: 'v1', model: 'gemini-1.5-flash' },
-        { version: 'v1beta', model: 'gemini-1.5-flash' },
-        { version: 'v1', model: 'gemini-1.5-pro' },
-        { version: 'v1beta', model: 'gemini-1.5-pro' },
-        { version: 'v1beta', model: 'gemini-pro' }
+        { version: 'v1beta', model: 'gemini-1.5-flash-002' }, // Modelo recomendado y estable
+        { version: 'v1beta', model: 'gemini-1.5-flash' },      // Alternativa sin versión específica
+        { version: 'v1beta', model: 'gemini-1.5-pro-002' },    // Modelo más potente
+        { version: 'v1beta', model: 'gemini-1.5-pro' }        // Alternativa pro
       ];
 
       let lastError = null;
