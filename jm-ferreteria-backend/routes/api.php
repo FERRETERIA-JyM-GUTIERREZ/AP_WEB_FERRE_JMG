@@ -110,7 +110,11 @@ Route::get('/seed-destinos/{clave}', function ($clave) {
     }
     
     try {
-        \Artisan::call('db:seed', ['--class' => 'DestinoEnvioSeeder']);
+        // Usar --force para evitar la confirmación en producción
+        \Artisan::call('db:seed', [
+            '--class' => 'DestinoEnvioSeeder',
+            '--force' => true
+        ]);
         return response()->json([
             'success' => true,
             'message' => 'Seeder ejecutado correctamente',
@@ -119,7 +123,8 @@ Route::get('/seed-destinos/{clave}', function ($clave) {
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'Error al ejecutar seeder: ' . $e->getMessage()
+            'message' => 'Error al ejecutar seeder: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ], 500);
     }
 });
