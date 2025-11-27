@@ -502,7 +502,7 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       for (const modeloConfig of modelosAPrueba) {
         const apiUrl = `https://generativelanguage.googleapis.com/${modeloConfig.version}/models/${modeloConfig.model}:generateContent`;
         
-        console.log(`🔄 Intentando con modelo: ${modeloConfig.model} (${modeloConfig.version})`);
+        console.log(`🔄 Probando modelo: ${modeloConfig.model} (${modeloConfig.version})`);
         
         try {
           const response = await fetch(`${apiUrl}?key=${this.geminiApiKey}`, {
@@ -528,45 +528,56 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
             })
           });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error de Gemini API:', errorData);
-        console.error('Status:', response.status);
-        console.error('URL:', `${this.geminiApiUrl}?key=${this.geminiApiKey.substring(0, 10)}...`);
-        
-        // Mensaje más específico según el error
-        let errorMessage = 'Error al procesar tu mensaje. Por favor, intenta usar el sistema de menús numerados.';
-        if (response.status === 404) {
-          errorMessage = 'Modelo no encontrado. Verifica que la API de Gemini esté habilitada en Google Cloud Console.';
-        } else if (response.status === 403) {
-          errorMessage = 'Acceso denegado. Verifica que la API key sea correcta y tenga permisos.';
-        } else if (response.status === 400) {
-          errorMessage = 'Solicitud inválida. Verifica la configuración de la API.';
+          if (response.ok) {
+            const data = await response.json();
+            
+            // Extraer la respuesta de Gemini
+            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+              const respuestaTexto = data.candidates[0].content.parts[0].text;
+              console.log(`✅ Modelo funcionando: ${modeloConfig.model} (${modeloConfig.version})`);
+              
+              return {
+                success: true,
+                text: respuestaTexto,
+                type: 'ai_message'
+              };
+            }
+          } else {
+            const errorData = await response.json();
+            lastError = { status: response.status, error: errorData, modelo: modeloConfig };
+            console.warn(`❌ Modelo ${modeloConfig.model} (${modeloConfig.version}) falló:`, response.status);
+            
+            // Si es 404, continuar con el siguiente modelo
+            if (response.status === 404) {
+              continue;
+            }
+            
+            // Si es otro error (403, 400), puede ser problema de permisos/configuración
+            break;
+          }
+        } catch (error) {
+          console.error(`Error al probar modelo ${modeloConfig.model}:`, error);
+          lastError = { error: error.message, modelo: modeloConfig };
+          continue;
         }
-        
-        return {
-          success: false,
-          error: errorMessage
-        };
       }
-
-      const data = await response.json();
       
-      // Extraer la respuesta de Gemini
-      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-        const respuestaTexto = data.candidates[0].content.parts[0].text;
-        
-        return {
-          success: true,
-          text: respuestaTexto,
-          type: 'ai_message'
-        };
-      } else {
-        return {
-          success: false,
-          error: 'No se pudo generar una respuesta. Por favor, intenta usar el sistema de menús numerados.'
-        };
+      // Si llegamos aquí, todos los modelos fallaron
+      console.error('❌ Todos los modelos fallaron. Último error:', lastError);
+      
+      let errorMessage = 'Error al procesar tu mensaje. Por favor, intenta usar el sistema de menús numerados.';
+      if (lastError && lastError.status === 404) {
+        errorMessage = 'Ningún modelo de Gemini está disponible. Verifica que la API de Gemini esté habilitada y que tu API key tenga acceso a los modelos.';
+      } else if (lastError && lastError.status === 403) {
+        errorMessage = 'Acceso denegado. Verifica que la API key sea correcta y tenga permisos para usar Gemini API.';
+      } else if (lastError && lastError.status === 400) {
+        errorMessage = 'Solicitud inválida. Verifica la configuración de la API.';
       }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
     } catch (error) {
       console.error('Error al llamar a Gemini API:', error);
       return {
