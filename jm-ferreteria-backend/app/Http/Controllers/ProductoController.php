@@ -330,11 +330,21 @@ class ProductoController extends Controller
                 // Verificar tanto la configuración como la variable de entorno
                 $cloudinaryUrl = config('cloudinary.cloud_url') ?: env('CLOUDINARY_URL');
                 
+                // Log detallado para diagnóstico
                 \Log::info('🔍 Verificando Cloudinary', [
-                    'cloudinary_config' => config('cloudinary.cloud_url'),
-                    'cloudinary_env' => env('CLOUDINARY_URL') ? 'Configurado' : 'No configurado',
-                    'cloudinary_detected' => $cloudinaryUrl ? 'Sí' : 'No'
+                    'cloudinary_config' => config('cloudinary.cloud_url') ? 'Sí' : 'No',
+                    'cloudinary_env' => env('CLOUDINARY_URL') ? 'Sí (' . substr(env('CLOUDINARY_URL'), 0, 30) . '...)' : 'No',
+                    'cloudinary_detected' => $cloudinaryUrl ? 'Sí' : 'No',
+                    'file_size' => $file->getSize(),
+                    'file_name' => $file->getClientOriginalName()
                 ]);
+                
+                // Si Cloudinary está configurado pero no se detecta, intentar configurarlo manualmente
+                if (!$cloudinaryUrl && env('CLOUDINARY_URL')) {
+                    \Log::info('⚠️ Cloudinary URL encontrada en env pero no en config, configurando manualmente');
+                    // El paquete debería leer automáticamente de CLOUDINARY_URL
+                    $cloudinaryUrl = env('CLOUDINARY_URL');
+                }
                 
                 if ($cloudinaryUrl) {
                     try {

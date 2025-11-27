@@ -19,6 +19,14 @@ return [
     */
 
     'default' => env('LOG_CHANNEL', 'stack'),
+    
+    // En Railway, usar stderr para que los logs aparezcan en la consola
+    'channels' => [
+        'stack' => [
+            'driver' => 'stack',
+            'channels' => ['single', 'stderr'],
+            'ignore_exceptions' => false,
+        ],
 
     /*
     |--------------------------------------------------------------------------
