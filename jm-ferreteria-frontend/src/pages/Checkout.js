@@ -46,13 +46,25 @@ const Checkout = () => {
       }
     } catch (error) {
       console.error('Error al cargar destinos:', error);
-      // Destinos por defecto
+      // Destinos por defecto (solo aéreos, sin Juliaca que es el origen)
       setDestinos([
-        { id: 1, nombre: 'Lima', costo: 15.00, tipo_envio: 'terrestre' },
-        { id: 2, nombre: 'Arequipa', costo: 25.00, tipo_envio: 'aereo' },
-        { id: 3, nombre: 'Trujillo', costo: 22.00, tipo_envio: 'aereo' },
+        { id: 1, nombre: 'Arequipa', costo: 25.00, tipo_envio: 'aereo' },
+        { id: 2, nombre: 'Ayacucho', costo: 23.00, tipo_envio: 'aereo' },
+        { id: 3, nombre: 'Cajamarca', costo: 24.00, tipo_envio: 'aereo' },
         { id: 4, nombre: 'Chiclayo', costo: 23.00, tipo_envio: 'aereo' },
-        { id: 5, nombre: 'Piura', costo: 26.00, tipo_envio: 'aereo' }
+        { id: 5, nombre: 'Cusco', costo: 28.00, tipo_envio: 'aereo' },
+        { id: 6, nombre: 'Huanta', costo: 26.00, tipo_envio: 'aereo' },
+        { id: 7, nombre: 'Iquitos', costo: 35.00, tipo_envio: 'aereo' },
+        { id: 8, nombre: 'Lamas', costo: 32.00, tipo_envio: 'aereo' },
+        { id: 9, nombre: 'Lima', costo: 15.00, tipo_envio: 'aereo' },
+        { id: 10, nombre: 'Piura', costo: 26.00, tipo_envio: 'aereo' },
+        { id: 11, nombre: 'Pto. Maldonado', costo: 38.00, tipo_envio: 'aereo' },
+        { id: 12, nombre: 'Pucallpa', costo: 33.00, tipo_envio: 'aereo' },
+        { id: 13, nombre: 'Tacna', costo: 27.00, tipo_envio: 'aereo' },
+        { id: 14, nombre: 'Tarapoto', costo: 30.00, tipo_envio: 'aereo' },
+        { id: 15, nombre: 'Trujillo', costo: 22.00, tipo_envio: 'aereo' },
+        { id: 16, nombre: 'Tumbes', costo: 30.00, tipo_envio: 'aereo' },
+        { id: 17, nombre: 'Yurimaguas', costo: 36.00, tipo_envio: 'aereo' }
       ]);
     } finally {
       setLoading(false);
