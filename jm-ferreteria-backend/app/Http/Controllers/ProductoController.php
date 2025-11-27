@@ -326,8 +326,9 @@ class ProductoController extends Controller
                         'resource_type' => 'image',
                     ]);
                     
-                    $filename = basename($uploadResult->getSecurePath());
                     $imageUrl = $uploadResult->getSecurePath();
+                    // Guardar la URL completa de Cloudinary para que el frontend la use directamente
+                    $filename = $imageUrl;
                     
                     \Log::info('✅ Imagen subida a Cloudinary exitosamente', [
                         'filename' => $filename,
@@ -338,7 +339,7 @@ class ProductoController extends Controller
                         'success' => true,
                         'message' => 'Imagen subida exitosamente',
                         'data' => [
-                            'filename' => $filename,
+                            'filename' => $filename, // URL completa de Cloudinary
                             'path' => $filename,
                             'url' => $imageUrl
                         ]

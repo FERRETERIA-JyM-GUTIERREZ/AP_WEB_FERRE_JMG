@@ -163,7 +163,7 @@ const Wishlist = () => {
                 <div className="relative overflow-hidden bg-gray-50 h-48">
                   {item.producto.imagen ? (
                 <img
-                  src={`${getBackendBaseUrl()}/img_productos/${item.producto.imagen}`}
+                  src={item.producto.imagen.startsWith('http') ? item.producto.imagen : `${getBackendBaseUrl()}/img_productos/${item.producto.imagen}`}
                   alt={item.producto.nombre}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />

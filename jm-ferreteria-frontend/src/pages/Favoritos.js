@@ -260,7 +260,7 @@ const Favoritos = () => {
                 <div className="relative overflow-hidden bg-gray-50 h-48">
                   {producto.imagen ? (
                     <img 
-                      src={`${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
+                      src={producto.imagen.startsWith('http') ? producto.imagen : `${getBackendBaseUrl()}/img_productos/${producto.imagen}`}
                       alt={producto.nombre} 
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />

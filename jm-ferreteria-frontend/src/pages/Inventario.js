@@ -144,7 +144,13 @@ const Inventario = () => {
       });
       // Si el producto tiene imagen existente, mostrar preview
       if (producto.imagen) {
-        setImagenPreview(`${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
+        // Si la imagen es una URL completa (Cloudinary), usarla directamente
+        if (producto.imagen.startsWith('http://') || producto.imagen.startsWith('https://')) {
+          setImagenPreview(producto.imagen);
+        } else {
+          // Si es una ruta relativa, construir URL completa
+          setImagenPreview(`${getBackendBaseUrl()}/img_productos/${producto.imagen}`);
+        }
       } else {
         setImagenPreview(null);
       }
@@ -202,7 +208,13 @@ const Inventario = () => {
     }
     // Si estamos editando y removemos la preview, restaurar la imagen original
     if (editando && form.imagen) {
-      setImagenPreview(`${getBackendBaseUrl()}/img_productos/${form.imagen}`);
+      // Si la imagen es una URL completa (Cloudinary), usarla directamente
+      if (form.imagen.startsWith('http://') || form.imagen.startsWith('https://')) {
+        setImagenPreview(form.imagen);
+      } else {
+        // Si es una ruta relativa, construir URL completa
+        setImagenPreview(`${getBackendBaseUrl()}/img_productos/${form.imagen}`);
+      }
     }
   };
 
