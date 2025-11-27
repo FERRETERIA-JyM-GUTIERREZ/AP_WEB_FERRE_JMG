@@ -260,4 +260,34 @@ Route::middleware('auth:sanctum')->group(function () {
 }); 
 
 // Clientes sugeridos para autocompletar
-Route::get('/sugerir-clientes', [UsuarioController::class, 'sugerirClientes']); 
+Route::get('/sugerir-clientes', [UsuarioController::class, 'sugerirClientes']);
+
+// Ruta temporal para actualizar Shalon a Shalom (ELIMINAR DESPUÉS DE USAR)
+Route::get('/actualizar-shalom/{clave}', function ($clave) {
+    if ($clave !== 'jym2024ferreteria') {
+        return response()->json(['error' => 'Clave incorrecta'], 403);
+    }
+    
+    try {
+        $actualizados = DB::table('agencias_envio')
+            ->where('transportista', 'Shalon')
+            ->update(['transportista' => 'Shalom']);
+        
+        // Verificar después de actualizar
+        $agenciasShalom = \App\Models\AgenciaEnvio::where('transportista', 'Shalom')->count();
+        $agenciasShalon = \App\Models\AgenciaEnvio::where('transportista', 'Shalon')->count();
+        
+        return response()->json([
+            'success' => true,
+            'mensaje' => 'Actualización completada',
+            'registros_actualizados' => $actualizados,
+            'agencias_shalom' => $agenciasShalom,
+            'agencias_shalon' => $agenciasShalon
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}); 
