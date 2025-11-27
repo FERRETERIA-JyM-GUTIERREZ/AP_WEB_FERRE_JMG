@@ -410,15 +410,22 @@ class ProductoController extends Controller
                 ], 400);
             }
         } catch (\Exception $e) {
-            \Log::error('💥 Error al subir imagen', [
+            \Log::error('💥 Error completo al subir imagen', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            // Retornar mensaje de error más detallado en desarrollo, genérico en producción
+            $errorMessage = config('app.debug') 
+                ? 'Error al subir imagen: ' . $e->getMessage() 
+                : 'Error al subir imagen. Por favor, verifica los logs del servidor.';
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error al subir imagen: ' . $e->getMessage()
+                'message' => $errorMessage,
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
