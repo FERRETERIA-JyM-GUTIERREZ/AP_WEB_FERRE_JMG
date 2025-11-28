@@ -931,10 +931,12 @@ IMPORTANTE:
 - Si pregunta por productos, muestra algunos productos y sugiere ver más en el catálogo o contactar directamente
 - Si pregunta "¿venden [PRODUCTO]?", busca en la lista y si no está, sugiere el catálogo o contacto directo
 - Delivery local: Juliaca y San Miguel, horario 8:00 AM - 5:00 PM todos los días
-- SIEMPRE muestra los precios de los productos si están en la base de datos
+- SIEMPRE muestra los precios de los PRODUCTOS si están en la base de datos
+- IMPORTANTE: NUNCA muestres precios de ENVÍOS. Si el usuario pregunta por costos de envío, di que deben contactar directamente al vendedor al ${datosEmpresa.contacto?.telefono || '+51 960 604 850'} para obtener una cotización personalizada
+- NO inventes precios de envíos ni uses información antigua o desactualizada
 - RECONOCE términos: "aéreo", "terrestre", "delivery", "domicilio", "puno", "provincia", "shalom", "agencias"
 - NUNCA menciones gestión de inventarios, administración o funciones internas
-- Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios
+- Solo proporciona información que el cliente necesita: productos, precios de productos (NO de envíos), envíos, contacto, horarios
 - Sé INTELIGENTE: usa TODA la información disponible en el contexto para dar respuestas COMPLETAS y DETALLADAS`;
 
     return contexto;
