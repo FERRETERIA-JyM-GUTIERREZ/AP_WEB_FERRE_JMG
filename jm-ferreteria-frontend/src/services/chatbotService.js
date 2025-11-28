@@ -588,52 +588,117 @@ class ChatbotService {
       }
     }
 
-    // Construir información de envíos
+    // Construir información COMPLETA de envíos con TODOS los destinos y agencias
+    enviosInfo = '\n\n═══════════════════════════════════════════════════════════\n';
+    enviosInfo += '📦 INFORMACIÓN COMPLETA DE ENVÍOS DISPONIBLES\n';
+    enviosInfo += '═══════════════════════════════════════════════════════════\n';
+    
+    // 1. ENVÍOS AÉREOS (Shalom Aéreo) - LISTA COMPLETA
     if (destinosEnvioData && destinosEnvioData.success && destinosEnvioData.destinos && destinosEnvioData.destinos.length > 0) {
       const enviosAereos = destinosEnvioData.destinos.filter(d => d.tipo_envio === 'aereo');
+      
+      enviosInfo += '\n✈️ ENVÍOS AÉREOS (Shalom Aéreo):\n';
+      enviosInfo += '- Disponible a nivel nacional\n';
+      enviosInfo += '- Entrega en terminal de agencia Shalom Aéreo\n';
+      enviosInfo += '- Solo disponible en ciudades principales (capitales de departamento), NO en provincias\n';
+      if (enviosAereos.length > 0) {
+        enviosInfo += `\n📋 DESTINOS DISPONIBLES PARA ENVÍO AÉREO (${enviosAereos.length} destinos):\n`;
+        enviosAereos.forEach((destino, idx) => {
+          enviosInfo += `${idx + 1}. ${destino.nombre}${destino.costo ? ` - Costo: S/ ${destino.costo}` : ''}\n`;
+        });
+      }
+      
+      // 2. ENVÍOS TERRESTRES (Shalom Terrestre) - LISTA COMPLETA
       const enviosTerrestres = destinosEnvioData.destinos.filter(d => d.tipo_envio === 'terrestre');
       
-      enviosInfo = '\n\nOPCIONES DE ENVÍO DISPONIBLES:\n';
-      
-      enviosInfo += '\n✈️ ENVÍOS AÉREOS (Shalom Aéreo):\n';
+      enviosInfo += '\n\n🚚 ENVÍOS TERRESTRES (Shalom Terrestre - RECOMENDADO):\n';
       enviosInfo += '- Disponible a nivel nacional\n';
-      enviosInfo += '- Entrega en terminal de agencia Shalom\n';
-      if (enviosAereos.length > 0) {
-        enviosInfo += `- ${enviosAereos.length} destinos aéreos disponibles\n`;
-      }
-      
-      enviosInfo += '\n🚚 ENVÍOS TERRESTRES:\n';
-      enviosInfo += '- Disponible a nivel nacional\n';
-      enviosInfo += '- Entrega en terminal de transporte\n';
+      enviosInfo += '- Entrega en agencias Shalom (puntos de recogida)\n';
+      enviosInfo += '- Es la opción MÁS ECONÓMICA y preferida por el 90% de nuestros clientes\n';
       if (enviosTerrestres.length > 0) {
-        enviosInfo += `- ${enviosTerrestres.length} destinos terrestres disponibles\n`;
+        enviosInfo += `\n📋 DESTINOS DISPONIBLES PARA ENVÍO TERRESTRE (${enviosTerrestres.length} destinos):\n`;
+        enviosTerrestres.forEach((destino, idx) => {
+          enviosInfo += `${idx + 1}. ${destino.nombre}${destino.costo ? ` - Costo: S/ ${destino.costo}` : ''}\n`;
+        });
       }
-      
-      enviosInfo += '\n🚛 DELIVERY LOCAL:\n';
-      enviosInfo += '- Entrega a domicilio en Juliaca y alrededores\n';
-      enviosInfo += '- Tiempo: 24-48 horas\n';
-      enviosInfo += '- Costo según distancia\n';
-      
-      enviosInfo += '\n🚌 DELIVERY A PROVINCIA DE PUNO:\n';
-      enviosInfo += '- Entrega en terminal de transporte público\n';
-      enviosInfo += '- Disponible para toda la región Puno\n';
-      enviosInfo += '- El cliente recoge en el terminal final\n';
-    } else {
-      // Información por defecto si no hay datos
-      enviosInfo = '\n\nOPCIONES DE ENVÍO DISPONIBLES:\n';
-      enviosInfo += '\n✈️ ENVÍOS AÉREOS (Shalom Aéreo):\n';
-      enviosInfo += '- Disponible a nivel nacional\n';
-      enviosInfo += '- Entrega en terminal de agencia Shalom\n';
-      enviosInfo += '\n🚚 ENVÍOS TERRESTRES:\n';
-      enviosInfo += '- Disponible a nivel nacional\n';
-      enviosInfo += '- Entrega en terminal de transporte\n';
-      enviosInfo += '\n🚛 DELIVERY LOCAL:\n';
-      enviosInfo += '- Entrega a domicilio en Juliaca y alrededores\n';
-      enviosInfo += '- Tiempo: 24-48 horas\n';
-      enviosInfo += '\n🚌 DELIVERY A PROVINCIA DE PUNO:\n';
-      enviosInfo += '- Entrega en terminal de transporte público\n';
-      enviosInfo += '- Disponible para toda la región Puno\n';
     }
+    
+    // 3. AGENCIAS SHALOM TERRESTRE - LISTA COMPLETA CON DIRECCIONES Y REFERENCIAS
+    let todasLasAgencias = [];
+    try {
+      const agenciasResponse = await this.obtenerAgencias();
+      if (agenciasResponse.success && agenciasResponse.agencias.length > 0) {
+        todasLasAgencias = agenciasResponse.agencias;
+        
+        // Agrupar agencias por ciudad
+        const agenciasPorCiudad = {};
+        todasLasAgencias.forEach(agencia => {
+          if (!agenciasPorCiudad[agencia.ciudad]) {
+            agenciasPorCiudad[agencia.ciudad] = [];
+          }
+          agenciasPorCiudad[agencia.ciudad].push(agencia);
+        });
+        
+        enviosInfo += '\n\n📍 AGENCIAS SHALOM TERRESTRE (Puntos de Recogida):\n';
+        enviosInfo += 'Estas son las agencias donde el cliente puede recoger su pedido:\n\n';
+        
+        Object.keys(agenciasPorCiudad).sort().forEach(ciudad => {
+          enviosInfo += `\n🏙️ ${ciudad.toUpperCase()} (${agenciasPorCiudad[ciudad].length} agencia${agenciasPorCiudad[ciudad].length > 1 ? 's' : ''}):\n`;
+          agenciasPorCiudad[ciudad].forEach((agencia, idx) => {
+            enviosInfo += `   ${idx + 1}. ${agencia.nombre}\n`;
+            enviosInfo += `      📍 Dirección: ${agencia.direccion}\n`;
+            if (agencia.referencia) {
+              enviosInfo += `      📌 Referencia: ${agencia.referencia}\n`;
+            }
+            if (agencia.telefono) {
+              enviosInfo += `      📞 Teléfono: ${agencia.telefono}\n`;
+            }
+            if (agencia.horarios) {
+              enviosInfo += `      🕒 Horarios: ${agencia.horarios}\n`;
+            }
+            enviosInfo += `\n`;
+          });
+        });
+        enviosInfo += `Total: ${todasLasAgencias.length} agencias Shalom disponibles en todo el país.\n`;
+      }
+    } catch (error) {
+      console.error('Error obteniendo agencias:', error);
+    }
+    
+    // 4. DELIVERY LOCAL (Juliaca y San Miguel)
+    enviosInfo += '\n\n🚛 DELIVERY LOCAL (Juliaca y San Miguel):\n';
+    enviosInfo += '- Entrega a domicilio en Juliaca y San Miguel\n';
+    enviosInfo += '- Horario de entrega: Todos los días de 8:00 AM a 5:00 PM\n';
+    enviosInfo += '- Tiempo: 24-48 horas\n';
+    enviosInfo += '- Costo según distancia\n';
+    enviosInfo += '- El cliente recibe el pedido directamente en su domicilio\n';
+    
+    // 5. TRANSPORTE PÚBLICO (Provincias de Puno)
+    const provinciasPunoLista = [
+      'Puno',
+      'Azángaro',
+      'Carabaya',
+      'Chucuito',
+      'El Collao',
+      'Huancané',
+      'Lampa',
+      'Melgar',
+      'Moho',
+      'San Antonio de Putina',
+      'San Román',
+      'Sandia',
+      'Yunguyo'
+    ];
+    
+    enviosInfo += '\n\n🚌 DELIVERY A PROVINCIAS DE PUNO (Transporte Público):\n';
+    enviosInfo += '- Disponible para TODAS las provincias del departamento de Puno\n';
+    enviosInfo += '- Entrega en terminal de transporte público\n';
+    enviosInfo += '- El cliente recoge su pedido en el terminal final de su provincia\n';
+    enviosInfo += `\n📋 PROVINCIAS DE PUNO DISPONIBLES (${provinciasPunoLista.length} provincias):\n`;
+    provinciasPunoLista.forEach((provincia, idx) => {
+      enviosInfo += `${idx + 1}. ${provincia}\n`;
+    });
+    enviosInfo += `\nTotal: ${provinciasPunoLista.length} provincias de Puno disponibles para envío por transporte público.\n`;
     
     // Información de lista de departamentos (solo cuando pregunten por envíos nacionales)
     if (listaDepartamentos.length > 0) {
