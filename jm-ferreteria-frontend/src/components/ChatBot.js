@@ -36,6 +36,7 @@ const ChatBot = () => {
   const continuousRecognitionRef = useRef(null); // Reconocimiento continuo en segundo plano
   const continuousListeningActiveRef = useRef(false);
   const isOpenRef = useRef(false);
+  const speakTextRef = useRef(null);
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -252,11 +253,22 @@ const ChatBot = () => {
               setIsOpen(true);
               isOpenRef.current = true;
               
-              // Reproducir mensaje de bienvenida por voz
+              // Reproducir mensaje de bienvenida por voz después de que el chatbot se abra
               setTimeout(() => {
                 const welcomeText = 'Hola, soy tu asistente virtual. ¿Qué necesitas hoy?';
-                speakText(welcomeText);
-              }, 500);
+                if (speakTextRef.current) {
+                  speakTextRef.current(welcomeText);
+                } else if ('speechSynthesis' in window) {
+                  // Si speakText no está disponible aún, usar síntesis directamente
+                  window.speechSynthesis.cancel(); // Cancelar cualquier síntesis anterior
+                  const utterance = new SpeechSynthesisUtterance(welcomeText);
+                  utterance.lang = 'es-PE';
+                  utterance.rate = 0.9;
+                  utterance.pitch = 1;
+                  utterance.volume = 1;
+                  window.speechSynthesis.speak(utterance);
+                }
+              }, 1500); // Aumentar delay para asegurar que el chatbot esté completamente abierto
             }
           }
         };
@@ -407,6 +419,9 @@ const ChatBot = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
+
+  // Actualizar referencia de speakText
+  speakTextRef.current = speakText;
 
   // Validar que la entrada sea solo un número
   const esNumeroValido = (texto) => {
