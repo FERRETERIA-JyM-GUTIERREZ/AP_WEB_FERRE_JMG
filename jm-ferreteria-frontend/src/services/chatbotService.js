@@ -623,8 +623,9 @@ class ChatbotService {
       if (enviosAereos.length > 0) {
         enviosInfo += `\n📋 DESTINOS DISPONIBLES PARA ENVÍO AÉREO (${enviosAereos.length} destinos):\n`;
         enviosAereos.forEach((destino, idx) => {
-          enviosInfo += `${idx + 1}. ${destino.nombre}${destino.costo ? ` - Costo: S/ ${destino.costo}` : ''}\n`;
+          enviosInfo += `${idx + 1}. ${destino.nombre}\n`;
         });
+        enviosInfo += `\nNOTA: Los costos de envío se coordinan directamente con el vendedor. Contacta al ${datosEmpresa.contacto?.telefono || '+51 960 604 850'} para consultar precios.\n`;
       }
       
       // 2. ENVÍOS TERRESTRES (Shalom Terrestre) - LISTA COMPLETA
@@ -637,8 +638,9 @@ class ChatbotService {
       if (enviosTerrestres.length > 0) {
         enviosInfo += `\n📋 DESTINOS DISPONIBLES PARA ENVÍO TERRESTRE (${enviosTerrestres.length} destinos):\n`;
         enviosTerrestres.forEach((destino, idx) => {
-          enviosInfo += `${idx + 1}. ${destino.nombre}${destino.costo ? ` - Costo: S/ ${destino.costo}` : ''}\n`;
+          enviosInfo += `${idx + 1}. ${destino.nombre}\n`;
         });
+        enviosInfo += `\nNOTA: Los costos de envío se coordinan directamente con el vendedor. Contacta al ${datosEmpresa.contacto?.telefono || '+51 960 604 850'} para consultar precios.\n`;
       }
     }
     
