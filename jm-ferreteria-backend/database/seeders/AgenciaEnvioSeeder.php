@@ -315,14 +315,8 @@ class AgenciaEnvioSeeder extends Seeder
             ['nombre' => 'Máncora', 'ciudad' => 'Máncora', 'departamento' => 'Piura', 'direccion' => 'Av. Grau Nro. 432 Máncora - Talara - Piura', 'referencia' => 'Frente Al Paradero De Autos De Los Órganos En Toda La Panamericana Norte', 'tipo' => 'Mediana'],
             ['nombre' => 'Sechura', 'ciudad' => 'Sechura', 'departamento' => 'Piura', 'direccion' => 'Av. Bayovar N° 311', 'referencia' => 'Al Costado De Antena 10 Radio', 'tipo' => 'Mediana'],
 
-            // ========== PUNO (SIN JULIACA) ==========
-            ['nombre' => 'Puno Av Costanera', 'ciudad' => 'Puno', 'departamento' => 'Puno', 'direccion' => 'Av. Costanera N° 211 Con Jr. Los Incas - Puno', 'referencia' => '', 'tipo' => 'Grande / Co'],
-            ['nombre' => 'Puno Salcedo', 'ciudad' => 'Puno', 'departamento' => 'Puno', 'direccion' => 'Urb. Aziruni Tepro I Etapa Mz. 18 Lt. 52 Jr Los Rosales – Salcedo Puno', 'referencia' => 'A Una Cdra. De La Av. Estudiante / A Dos Cdras. De Senati Puno', 'tipo' => 'Pequeña'],
-            ['nombre' => 'Puno Alto Puno', 'ciudad' => 'Puno', 'departamento' => 'Puno', 'direccion' => 'Urb. San Pedro-alto Puno, Av La Cultura N° 160, Puno - Puno - Puno', 'referencia' => 'A Tres Cdras. De La Av. Que Va A Juliaca / A Dos Cdras. Del Grifo Bronco', 'tipo' => 'Pequeña'],
-            ['nombre' => 'Azángaro', 'ciudad' => 'Azángaro', 'departamento' => 'Puno', 'direccion' => 'Av. Próceres S/n, Azángaro - Puno', 'referencia' => 'a Dos Cdras. Del Parque De La Madre / A Orillas De La Misma Av. Proceres', 'tipo' => 'Grande / Co'],
+            // ========== PUNO (SOLO DESAGUADERO) ==========
             ['nombre' => 'Desaguadero', 'ciudad' => 'Desaguadero', 'departamento' => 'Puno', 'direccion' => 'Av. 28 De Julio N° 564 - 566, Chucuito', 'referencia' => 'A 50 Mtrs. Del Banco De La Nacion', 'tipo' => 'Grande / Co'],
-            ['nombre' => 'Ilave', 'ciudad' => 'Ilave', 'departamento' => 'Puno', 'direccion' => 'Jr. Bolognesi Nro. 866 Barrio Cruzani, El Collao - Puno', 'referencia' => 'A Una Cuadra Del Coliseo Y Del Cementerio De Ilave', 'tipo' => 'Grande / Co'],
-            ['nombre' => 'Ayaviri', 'ciudad' => 'Ayaviri', 'departamento' => 'Puno', 'direccion' => 'Jr. Santa Rosa Prolongación S/n Magisterial - Puno - Melgar - Ayaviri', 'referencia' => 'A 50 Metros Del Óvalo, Salida A Juliaca', 'tipo' => 'Grande / Co'],
 
             // ========== SAN MARTÍN ==========
             ['nombre' => 'Moyobamba Centro', 'ciudad' => 'Moyobamba', 'departamento' => 'San Martín', 'direccion' => 'Jr. Serafín Filomeno N°279, Moyobamba - Moyobamba - San Martín', 'referencia' => 'A Una Cuadra Imedia Del Cumo (centro Cultural De Moyobamba)', 'tipo' => 'Pequeña'],
