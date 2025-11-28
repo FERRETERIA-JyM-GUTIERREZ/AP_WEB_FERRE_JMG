@@ -478,6 +478,32 @@ class ChatbotService {
 
   // Generar contexto para Gemini con información de la empresa
   async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null) {
+    // Validar que datosEmpresa no sea null
+    if (!datosEmpresa) {
+      console.error('⚠️ datosEmpresa es null, usando datos por defecto');
+      datosEmpresa = {
+        nombre: 'JM Ferretería',
+        propietario: 'Juan Nativerio Quispe Gutiérrez',
+        añosExperiencia: '9+ años',
+        especialidad: 'Herramientas profesionales, maquinaria industrial y ferretería de alta calidad',
+        contacto: {
+          telefono: '+51 960 604 850',
+          whatsapp: '+51 960 604 850',
+          email: 'jymgutierrez2024@gmail.com'
+        },
+        ubicacion: {
+          direccion: 'PZA. SAN JOSÉ NRO. 0',
+          distrito: 'URB. SAN JOSÉ (PUESTO 4 PABELLÓN J BASE II)',
+          ciudad: 'PUNO - SAN ROMÁN - JULIACA'
+        },
+        horarios: {
+          semana: 'Lunes a Viernes: 8:00 AM - 6:00 PM',
+          sabado: 'Sábados: 8:00 AM - 7:00 PM',
+          domingo: 'Domingos: 8:00 AM - 5:00 PM'
+        }
+      };
+    }
+    
     let productosInfo = '';
     let categoriasInfo = '';
     
@@ -490,54 +516,60 @@ class ChatbotService {
     }
     
     // Construir información de productos y categorías
-    if (categoriasData && categoriasData.success && categoriasData.categorias.length > 0) {
+    if (categoriasData && categoriasData.success && categoriasData.categorias && categoriasData.categorias.length > 0) {
       categoriasInfo = `\n\nCATEGORÍAS DISPONIBLES:\n${categoriasData.categorias.map((cat, idx) => `${idx + 1}. ${cat.nombre || cat}`).join('\n')}`;
     }
     
-    if (productosData && productosData.success && productosData.productos.length > 0) {
+    if (productosData && productosData.success && productosData.productos && productosData.productos.length > 0) {
       // Agrupar productos por categoría
       const productosPorCategoria = {};
       productosData.productos.forEach(producto => {
-        const categoria = producto.categoria?.nombre || 'Sin categoría';
-        if (!productosPorCategoria[categoria]) {
-          productosPorCategoria[categoria] = [];
+        if (producto && producto.nombre) {
+          const categoria = producto.categoria?.nombre || 'Sin categoría';
+          if (!productosPorCategoria[categoria]) {
+            productosPorCategoria[categoria] = [];
+          }
+          productosPorCategoria[categoria].push(producto);
         }
-        productosPorCategoria[categoria].push(producto);
       });
       
-      productosInfo = '\n\nPRODUCTOS DISPONIBLES (por categoría):\n';
-      Object.keys(productosPorCategoria).forEach(categoria => {
-        productosInfo += `\n${categoria}:\n`;
-        productosPorCategoria[categoria].slice(0, 10).forEach(producto => {
-          productosInfo += `- ${producto.nombre}${producto.precio ? ` (S/ ${producto.precio})` : ''}\n`;
+      if (Object.keys(productosPorCategoria).length > 0) {
+        productosInfo = '\n\nPRODUCTOS DISPONIBLES (por categoría):\n';
+        Object.keys(productosPorCategoria).forEach(categoria => {
+          productosInfo += `\n${categoria}:\n`;
+          productosPorCategoria[categoria].slice(0, 10).forEach(producto => {
+            if (producto && producto.nombre) {
+              productosInfo += `- ${producto.nombre}${producto.precio ? ` (S/ ${producto.precio})` : ''}\n`;
+            }
+          });
+          if (productosPorCategoria[categoria].length > 10) {
+            productosInfo += `... y ${productosPorCategoria[categoria].length - 10} productos más\n`;
+          }
         });
-        if (productosPorCategoria[categoria].length > 10) {
-          productosInfo += `... y ${productosPorCategoria[categoria].length - 10} productos más\n`;
-        }
-      });
+      }
     }
 
-    const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre}, una ferretería con ${datosEmpresa.añosExperiencia} de experiencia.
+    const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre || 'JM Ferretería'}, una ferretería con ${datosEmpresa.añosExperiencia || '9+ años'} de experiencia.
 
 INFORMACIÓN DE LA EMPRESA:
-- Nombre: ${datosEmpresa.nombre}
-- Propietario: ${datosEmpresa.propietario}
-- Especialidad: ${datosEmpresa.especialidad}
+- Nombre: ${datosEmpresa.nombre || 'JM Ferretería'}
+- Propietario: ${datosEmpresa.propietario || 'Juan Nativerio Quispe Gutiérrez'}
+- Especialidad: ${datosEmpresa.especialidad || 'Herramientas profesionales, maquinaria industrial y ferretería'}
 
 CONTACTO:
-- Teléfono: ${datosEmpresa.contacto.telefono}
-- WhatsApp: ${datosEmpresa.contacto.whatsapp}
-- Email: ${datosEmpresa.contacto.email}
+- Teléfono: ${datosEmpresa.contacto?.telefono || '+51 960 604 850'}
+- WhatsApp: ${datosEmpresa.contacto?.whatsapp || '+51 960 604 850'}
+- Email: ${datosEmpresa.contacto?.email || 'jymgutierrez2024@gmail.com'}
 
 UBICACIÓN:
-- Dirección: ${datosEmpresa.ubicacion.direccion}
-- ${datosEmpresa.ubicacion.distrito}
-- ${datosEmpresa.ubicacion.ciudad}
+- Dirección: ${datosEmpresa.ubicacion?.direccion || 'PZA. SAN JOSÉ NRO. 0'}
+- ${datosEmpresa.ubicacion?.distrito || 'URB. SAN JOSÉ'}
+- ${datosEmpresa.ubicacion?.ciudad || 'PUNO - SAN ROMÁN - JULIACA'}
 
 HORARIOS:
-- ${datosEmpresa.horarios.semana}
-- ${datosEmpresa.horarios.sabado}
-- ${datosEmpresa.horarios.domingo}
+- ${datosEmpresa.horarios?.semana || 'Lunes a Viernes: 8:00 AM - 6:00 PM'}
+- ${datosEmpresa.horarios?.sabado || 'Sábados: 8:00 AM - 7:00 PM'}
+- ${datosEmpresa.horarios?.domingo || 'Domingos: 8:00 AM - 5:00 PM'}
 
 SERVICIOS:
 - Venta de herramientas profesionales, maquinaria industrial y ferretería

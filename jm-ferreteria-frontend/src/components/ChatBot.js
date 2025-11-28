@@ -385,6 +385,22 @@ const ChatBot = () => {
           }
         }
         
+        // Validar que datosEmpresa esté cargado
+        if (!datosEmpresa) {
+          // Esperar un momento y reintentar, o usar datos por defecto
+          const errorMessage = {
+            id: Date.now() + 1,
+            text: '⏳ <strong>Cargando información...</strong><br><br>Por favor, espera un momento e intenta de nuevo.<br><br><strong>Opciones:</strong><br><br>1.- 🔄 Reintentar<br>2.- 📞 Contacto directo<br><br><strong>Escriba un número:</strong>',
+            sender: 'bot',
+            timestamp: new Date().toLocaleTimeString(),
+            type: 'error',
+            opcionesNumeradas: true
+          };
+          setMessages(prev => [...prev, errorMessage]);
+          setIsTyping(false);
+          return;
+        }
+        
         // Obtener historial reciente para contexto
         const historialReciente = messages.slice(-10).map(msg => ({
           sender: msg.sender,
