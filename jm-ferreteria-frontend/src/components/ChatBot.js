@@ -1230,7 +1230,7 @@ const ChatBot = () => {
 
       {/* Ventana del chatbot */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-orange-200">
+        <div className="absolute bottom-20 right-0 w-[calc(100vw-2rem)] sm:w-96 max-w-sm h-[calc(100vh-8rem)] sm:h-[600px] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-orange-200">
           {/* Header */}
           <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white px-4 py-3 shadow-lg">
             <div className="flex justify-between items-center gap-3">
@@ -1320,21 +1320,25 @@ const ChatBot = () => {
           </div>
 
           {/* Input area */}
-          <div className="border-t border-orange-100 bg-gradient-to-b from-white to-gray-50 p-5 shadow-inner">
-            <div className="flex space-x-2">
+          <div className="border-t border-orange-100 bg-gradient-to-b from-white to-gray-50 p-4 sm:p-5 shadow-inner">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Botón de micrófono */}
               {recognitionSupported && (
                 <button
                   onClick={toggleListening}
                   disabled={isTyping}
-                  className={`px-4 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
+                  className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 active:scale-95 flex items-center justify-center ${
                     isListening 
-                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
-                  } disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed`}
+                      ? 'bg-gradient-to-br from-red-500 to-red-600 text-white animate-pulse shadow-red-300' 
+                      : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
                   title={isListening ? 'Detener grabación' : 'Hablar (micrófono)'}
                 >
-                  {isListening ? <FaMicrophoneSlash className="w-5 h-5" /> : <FaMicrophone className="w-5 h-5" />}
+                  {isListening ? (
+                    <FaMicrophoneSlash className="w-5 h-5 sm:w-6 sm:h-6" />
+                  ) : (
+                    <FaMicrophone className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
                 </button>
               )}
               
@@ -1344,7 +1348,7 @@ const ChatBot = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={isListening ? "🎤 Escuchando..." : "Escriba tu pregunta o un número..."}
-                className="flex-1 border-2 border-orange-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm"
+                className="flex-1 min-w-0 border-2 border-orange-200 rounded-xl px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm"
                 disabled={isTyping || isListening}
               />
               
@@ -1352,27 +1356,27 @@ const ChatBot = () => {
               {isSpeaking && (
                 <button
                   onClick={stopSpeaking}
-                  className="px-4 py-3 rounded-xl bg-purple-500 hover:bg-purple-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                  className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 active:scale-95 flex items-center justify-center"
                   title="Detener voz"
                 >
-                  <FaVolumeMute className="w-5 h-5" />
+                  <FaVolumeMute className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               )}
               
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isTyping || isListening}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
+                className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 active:scale-95 font-semibold text-sm sm:text-base whitespace-nowrap"
               >
                 Enviar
               </button>
             </div>
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-3 gap-2">
               <p className="text-xs text-gray-600 text-center font-medium flex-1">
                 💡 Escriba tu pregunta en texto libre o un número para usar menús
               </p>
               {recognitionSupported && (
-                <p className="text-xs text-blue-600 ml-2">
+                <p className="text-xs text-emerald-600 font-medium whitespace-nowrap">
                   {isListening ? '🎤 Escuchando...' : '🎤 Presiona el micrófono para hablar'}
                 </p>
               )}
