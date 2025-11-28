@@ -15,6 +15,11 @@ const ChatBot = () => {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  // Estados para flujo de envíos
+  const [departamentos, setDepartamentos] = useState([]);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState(null);
+  const [ciudades, setCiudades] = useState([]);
+  const [ciudadSeleccionada, setCiudadSeleccionada] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Cargar datos de la empresa al montar
@@ -109,20 +114,204 @@ const ChatBot = () => {
     
     setIsTyping(true);
     
-    // Si NO es un número, usar Gemini AI
+    // Si NO es un número, usar Gemini AI o detectar intenciones específicas
     if (!esNumeroValido(mensajeLimpio)) {
       try {
+        const mensajeLower = mensajeLimpio.toLowerCase();
+        
+        // Detectar si pregunta por productos
+        const preguntaProductos = /producto|catálogo|catalogo|categoría|categoria|qué tienen|que tienen|qué venden|que venden/i.test(mensajeLimpio);
+        
+        // Detectar si pregunta por envíos
+        const preguntaEnvios = /envío|envio|entrega|shalom|shalon|departamento|distrito|ciudad|ubicación|ubicacion/i.test(mensajeLimpio);
+        
+        // Si pregunta por productos, mostrar productos reales
+        if (preguntaProductos) {
+          const categoriasData = await chatbotService.obtenerCategorias();
+          const productosData = await chatbotService.obtenerProductos();
+          
+          if (categoriasData.success && categoriasData.categorias.length > 0) {
+            setCategorias(categoriasData.categorias);
+            
+            // Agrupar productos por categoría
+            const productosPorCategoria = {};
+            if (productosData.success && productosData.productos.length > 0) {
+              productosData.productos.forEach(producto => {
+                const categoria = producto.categoria?.nombre || 'Sin categoría';
+                if (!productosPorCategoria[categoria]) {
+                  productosPorCategoria[categoria] = [];
+                }
+                productosPorCategoria[categoria].push(producto);
+              });
+            }
+            
+            let textoProductos = '<strong>🛍️ NUESTROS PRODUCTOS</strong><br><br>';
+            textoProductos += 'Tenemos productos en las siguientes categorías:<br><br>';
+            
+            Object.keys(productosPorCategoria).forEach((categoria, idx) => {
+              textoProductos += `<strong>${idx + 1}. ${categoria}</strong><br>`;
+              const productosCategoria = productosPorCategoria[categoria].slice(0, 5);
+              productosCategoria.forEach(producto => {
+                textoProductos += `   • ${producto.nombre}${producto.precio ? ` - S/ ${producto.precio}` : ''}<br>`;
+              });
+              if (productosPorCategoria[categoria].length > 5) {
+                textoProductos += `   ... y ${productosPorCategoria[categoria].length - 5} productos más<br>`;
+              }
+              textoProductos += '<br>';
+            });
+            
+            textoProductos += '<strong>💡 Para ver más productos o hacer una compra, contacta a nuestro vendedor.</strong><br><br>';
+            textoProductos += '<strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>';
+            
+            const botMessage = {
+              id: Date.now() + 1,
+              text: textoProductos,
+              sender: 'bot',
+              timestamp: new Date().toLocaleTimeString(),
+              type: 'productos',
+              opcionesNumeradas: true
+            };
+            setMessages(prev => [...prev, botMessage]);
+            setCurrentState('menu_productos');
+            setIsTyping(false);
+            return;
+          }
+        }
+        
+        // Si pregunta por envíos, iniciar flujo de departamentos
+        if (preguntaEnvios && currentState !== 'menu_envio_departamento' && currentState !== 'menu_envio_ciudad') {
+          const departamentosData = await chatbotService.obtenerDepartamentos();
+          
+          if (departamentosData.success && departamentosData.departamentos.length > 0) {
+            setDepartamentos(departamentosData.departamentos);
+            
+            let textoEnvios = '<strong>🚚 ENVÍOS POR SHALOM AÉREO</strong><br><br>';
+            textoEnvios += 'Trabajamos exclusivamente con Shalom Aéreo para envíos a nivel nacional.<br><br>';
+            textoEnvios += '<strong>¿A qué departamento desea enviar?</strong><br><br>';
+            
+            departamentosData.departamentos.forEach((dept, idx) => {
+              textoEnvios += `${idx + 1}. ${dept}<br>`;
+            });
+            
+            textoEnvios += '<br><strong>Escriba el nombre del departamento o un número:</strong>';
+            
+            const botMessage = {
+              id: Date.now() + 1,
+              text: textoEnvios,
+              sender: 'bot',
+              timestamp: new Date().toLocaleTimeString(),
+              type: 'envios',
+              opcionesNumeradas: false
+            };
+            setMessages(prev => [...prev, botMessage]);
+            setCurrentState('menu_envio_departamento');
+            setIsTyping(false);
+            return;
+          }
+        }
+        
+        // Si está en flujo de envíos y menciona un departamento
+        if (currentState === 'menu_envio_departamento') {
+          const deptEncontrado = departamentos.find(dept => 
+            dept.toLowerCase().includes(mensajeLower) || mensajeLower.includes(dept.toLowerCase())
+          );
+          
+          if (deptEncontrado) {
+            setDepartamentoSeleccionado(deptEncontrado);
+            const ciudadesData = await chatbotService.obtenerCiudadesPorDepartamento(deptEncontrado);
+            
+            if (ciudadesData.success && ciudadesData.ciudades.length > 0) {
+              setCiudades(ciudadesData.ciudades);
+              
+              let textoCiudades = `<strong>📍 CIUDADES/DISTRITOS EN ${deptEncontrado.toUpperCase()}</strong><br><br>`;
+              textoCiudades += '<strong>Seleccione la ciudad o distrito:</strong><br><br>';
+              
+              ciudadesData.ciudades.forEach((ciudad, idx) => {
+                textoCiudades += `${idx + 1}. ${ciudad}<br>`;
+              });
+              
+              textoCiudades += '<br><strong>Escriba el nombre de la ciudad o un número:</strong>';
+              
+              const botMessage = {
+                id: Date.now() + 1,
+                text: textoCiudades,
+                sender: 'bot',
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'envios',
+                opcionesNumeradas: false
+              };
+              setMessages(prev => [...prev, botMessage]);
+              setCurrentState('menu_envio_ciudad');
+              setIsTyping(false);
+              return;
+            }
+          }
+        }
+        
+        // Si está en flujo de ciudades y menciona una ciudad
+        if (currentState === 'menu_envio_ciudad') {
+          const ciudadEncontrada = ciudades.find(ciudad => 
+            ciudad.toLowerCase().includes(mensajeLower) || mensajeLower.includes(ciudad.toLowerCase())
+          );
+          
+          if (ciudadEncontrada) {
+            setCiudadSeleccionada(ciudadEncontrada);
+            const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada);
+            
+            if (agenciasData.success && agenciasData.agencias.length > 0) {
+              let textoAgencias = `<strong>📍 AGENCIAS SHALOM EN ${ciudadEncontrada.toUpperCase()}</strong><br><br>`;
+              
+              agenciasData.agencias.forEach((agencia, idx) => {
+                textoAgencias += `<strong>${idx + 1}. ${agencia.nombre}</strong><br>`;
+                textoAgencias += `📍 Dirección: ${agencia.direccion}<br>`;
+                if (agencia.referencia) {
+                  textoAgencias += `📍 Referencia: ${agencia.referencia}<br>`;
+                }
+                if (agencia.telefono) {
+                  textoAgencias += `📞 Teléfono: ${agencia.telefono}<br>`;
+                }
+                if (agencia.horarios) {
+                  textoAgencias += `🕒 Horarios: ${agencia.horarios}<br>`;
+                }
+                textoAgencias += '<br>';
+              });
+              
+              textoAgencias += '<strong>💡 Para realizar un pedido, contacta a nuestro vendedor.</strong><br><br>';
+              textoAgencias += '<strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>';
+              
+              const botMessage = {
+                id: Date.now() + 1,
+                text: textoAgencias,
+                sender: 'bot',
+                timestamp: new Date().toLocaleTimeString(),
+                type: 'envios',
+                opcionesNumeradas: true
+              };
+              setMessages(prev => [...prev, botMessage]);
+              setCurrentState('menu_principal');
+              setIsTyping(false);
+              return;
+            }
+          }
+        }
+        
         // Obtener historial reciente para contexto
         const historialReciente = messages.slice(-10).map(msg => ({
           sender: msg.sender,
           text: msg.sender === 'user' ? msg.text : msg.text.replace(/<[^>]*>/g, '') // Remover HTML para contexto
         }));
         
+        // Obtener productos y categorías para contexto
+        const productosData = await chatbotService.obtenerProductos();
+        const categoriasData = await chatbotService.obtenerCategorias();
+        
         // Procesar con Gemini
         const respuestaGemini = await chatbotService.procesarConGemini(
           mensajeLimpio, 
           datosEmpresa, 
-          historialReciente
+          historialReciente,
+          productosData,
+          categoriasData
         );
         
         if (respuestaGemini.success) {

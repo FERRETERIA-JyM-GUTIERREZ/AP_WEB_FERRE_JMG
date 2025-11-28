@@ -201,6 +201,66 @@ class ChatbotService {
     }
   }
 
+  // Obtener departamentos disponibles para envíos Shalom
+  async obtenerDepartamentos() {
+    try {
+      const response = await this.api.get('/envios/ciudades');
+      if (response.data.success) {
+        const departamentos = [...new Set(response.data.data.map(item => item.departamento))];
+        return {
+          success: true,
+          departamentos: departamentos.sort(),
+          total: departamentos.length
+        };
+      }
+      return { success: false, departamentos: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo departamentos:', error);
+      return { success: false, departamentos: [], total: 0 };
+    }
+  }
+
+  // Obtener ciudades/distritos por departamento
+  async obtenerCiudadesPorDepartamento(departamento) {
+    try {
+      const response = await this.api.get('/envios/agencias', {
+        params: { departamento: departamento }
+      });
+      if (response.data.success) {
+        const ciudades = [...new Set(response.data.data.map(item => item.ciudad))];
+        return {
+          success: true,
+          ciudades: ciudades.sort(),
+          total: ciudades.length,
+          departamento: departamento
+        };
+      }
+      return { success: false, ciudades: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo ciudades:', error);
+      return { success: false, ciudades: [], total: 0 };
+    }
+  }
+
+  // Obtener agencias por ciudad (para mostrar ubicación)
+  async obtenerAgenciasPorCiudad(ciudad) {
+    try {
+      const response = await this.api.get(`/envios/agencias/ciudad/${encodeURIComponent(ciudad)}`);
+      if (response.data.success) {
+        return {
+          success: true,
+          agencias: response.data.data,
+          total: response.data.total,
+          ciudad: ciudad
+        };
+      }
+      return { success: false, agencias: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo agencias:', error);
+      return { success: false, agencias: [], total: 0 };
+    }
+  }
+
   // Manejar opciones de contacto
   manejarOpcionContacto(numero, datosEmpresa) {
     switch (numero) {
@@ -417,7 +477,46 @@ class ChatbotService {
   }
 
   // Generar contexto para Gemini con información de la empresa
-  generarContextoGemini(datosEmpresa, historialMensajes = []) {
+  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null) {
+    let productosInfo = '';
+    let categoriasInfo = '';
+    
+    // Si no se proporcionaron productos/categorías, intentar obtenerlos
+    if (!productosData) {
+      productosData = await this.obtenerProductos();
+    }
+    if (!categoriasData) {
+      categoriasData = await this.obtenerCategorias();
+    }
+    
+    // Construir información de productos y categorías
+    if (categoriasData && categoriasData.success && categoriasData.categorias.length > 0) {
+      categoriasInfo = `\n\nCATEGORÍAS DISPONIBLES:\n${categoriasData.categorias.map((cat, idx) => `${idx + 1}. ${cat.nombre || cat}`).join('\n')}`;
+    }
+    
+    if (productosData && productosData.success && productosData.productos.length > 0) {
+      // Agrupar productos por categoría
+      const productosPorCategoria = {};
+      productosData.productos.forEach(producto => {
+        const categoria = producto.categoria?.nombre || 'Sin categoría';
+        if (!productosPorCategoria[categoria]) {
+          productosPorCategoria[categoria] = [];
+        }
+        productosPorCategoria[categoria].push(producto);
+      });
+      
+      productosInfo = '\n\nPRODUCTOS DISPONIBLES (por categoría):\n';
+      Object.keys(productosPorCategoria).forEach(categoria => {
+        productosInfo += `\n${categoria}:\n`;
+        productosPorCategoria[categoria].slice(0, 10).forEach(producto => {
+          productosInfo += `- ${producto.nombre}${producto.precio ? ` (S/ ${producto.precio})` : ''}\n`;
+        });
+        if (productosPorCategoria[categoria].length > 10) {
+          productosInfo += `... y ${productosPorCategoria[categoria].length - 10} productos más\n`;
+        }
+      });
+    }
+
     const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre}, una ferretería con ${datosEmpresa.añosExperiencia} de experiencia.
 
 INFORMACIÓN DE LA EMPRESA:
@@ -445,7 +544,7 @@ SERVICIOS:
 - Asesoramiento técnico
 - Cotizaciones personalizadas
 - Entrega a domicilio en Juliaca y alrededores
-- Entregas a nivel nacional por Shalon
+- Entregas a nivel nacional por Shalom Aéreo
 - Garantía en productos
 - Servicio post-venta
 
@@ -455,22 +554,31 @@ MÉTODOS DE PAGO:
 - Transferencias bancarias
 - Yape, Plin, Billetera digital
 
+ENTREGAS:
+- Para envíos a nivel nacional, trabajamos exclusivamente con Shalom Aéreo
+- Si el cliente pregunta por envíos, debes preguntarle a qué departamento desea enviar
+- Luego mostrar las ciudades/distritos disponibles de ese departamento
+- Finalmente mostrar la dirección de la agencia en esa ciudad${categoriasInfo}${productosInfo}
+
 INSTRUCCIONES:
 1. Responde de forma amigable y profesional
-2. Si el usuario pregunta por productos, sugiere que puede ver el catálogo o contactar al vendedor
-3. Si pregunta por precios, indica que debe contactar al vendedor para cotización
-4. Si pregunta por entregas, menciona las opciones disponibles
+2. Si el usuario pregunta por productos, menciona las categorías disponibles y algunos productos destacados
+3. Si pregunta por precios específicos, indica que debe contactar al vendedor para cotización exacta
+4. Si pregunta por entregas/envíos, menciona que trabajamos con Shalom Aéreo y pregunta el departamento
 5. Mantén las respuestas concisas pero informativas
 6. Usa emojis de forma moderada
 7. Si no sabes algo, ofrece contactar al vendedor
 
-IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, sugiere contactar al vendedor o usar el menú del chatbot.`;
+IMPORTANTE: 
+- Si el usuario pregunta por productos, menciona las categorías y algunos productos disponibles
+- Si pregunta por envíos, pregunta el departamento primero, luego la ciudad
+- Para precios exactos, siempre sugiere contactar al vendedor`;
 
     return contexto;
   }
 
   // Procesar mensaje con Google Gemini AI
-  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = []) {
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null) {
     // Verificar si hay API key configurada
     if (!this.geminiApiKey || this.geminiApiKey === '') {
       console.warn('⚠️ Gemini API Key no configurada');
@@ -481,8 +589,8 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
     }
 
     try {
-      // Generar contexto con información de la empresa
-      const contexto = this.generarContextoGemini(datosEmpresa, historialMensajes);
+      // Generar contexto con información de la empresa, productos y categorías
+      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData);
       
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
