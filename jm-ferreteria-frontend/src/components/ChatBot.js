@@ -125,6 +125,75 @@ const ChatBot = () => {
         // Detectar si pregunta por envíos
         const preguntaEnvios = /envío|envio|entrega|shalom|shalon|departamento|distrito|ciudad|ubicación|ubicacion/i.test(mensajeLimpio);
         
+        // PRIMERO: Verificar si mencionan un lugar específico (antes de mostrar lista genérica)
+        if (preguntaEnvios) {
+          const departamentosData = await chatbotService.obtenerDepartamentos();
+          const mensajeLower = mensajeLimpio.toLowerCase();
+          
+          if (departamentosData.success && departamentosData.departamentos.length > 0) {
+            // Buscar si mencionan algún departamento o ciudad específica
+            const departamentoMencionado = departamentosData.departamentos.find(dept => {
+              const deptLower = dept.toLowerCase();
+              // Buscar si el mensaje contiene el nombre del departamento
+              return mensajeLower.includes(deptLower) || deptLower.includes(mensajeLower.split(' ').find(word => word.length > 3) || '');
+            });
+            
+            // Si encontraron un departamento específico, responder directamente
+            if (departamentoMencionado) {
+              const ciudadesData = await chatbotService.obtenerCiudadesPorDepartamento(departamentoMencionado);
+              
+              if (ciudadesData.success && ciudadesData.ciudades.length > 0) {
+                let textoRespuesta = `<strong>✅ SÍ, hacemos envíos a ${departamentoMencionado.toUpperCase()}</strong><br><br>`;
+                textoRespuesta += `Tenemos disponibles las siguientes ciudades/provincias en ${departamentoMencionado}:<br><br>`;
+                
+                ciudadesData.ciudades.forEach((ciudad, idx) => {
+                  textoRespuesta += `${idx + 1}. ${ciudad}<br>`;
+                });
+                
+                textoRespuesta += `<br><strong>Total: ${ciudadesData.ciudades.length} ciudades/provincias disponibles.</strong><br><br>`;
+                textoRespuesta += `Puedes elegir entre:<br>`;
+                textoRespuesta += `✈️ Envío aéreo (Shalom Aéreo)<br>`;
+                textoRespuesta += `🚚 Envío terrestre<br><br>`;
+                textoRespuesta += `<strong>💡 Para más información o realizar un pedido, contacta a nuestro vendedor.</strong><br><br>`;
+                textoRespuesta += `<strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>`;
+                
+                const botMessage = {
+                  id: Date.now() + 1,
+                  text: textoRespuesta,
+                  sender: 'bot',
+                  timestamp: new Date().toLocaleTimeString(),
+                  type: 'envios',
+                  opcionesNumeradas: true
+                };
+                setMessages(prev => [...prev, botMessage]);
+                setCurrentState('menu_principal');
+                setIsTyping(false);
+                return;
+              } else {
+                // Departamento mencionado pero no hay ciudades disponibles
+                let textoRespuesta = `<strong>❌ No hacemos envíos a ${departamentoMencionado.toUpperCase()}</strong><br><br>`;
+                textoRespuesta += `Actualmente no tenemos cobertura de envío para ${departamentoMencionado}.<br><br>`;
+                textoRespuesta += `Sin embargo, hacemos envíos a nivel nacional a muchos otros departamentos.<br><br>`;
+                textoRespuesta += `<strong>💡 Para consultar otros destinos disponibles o más información, contacta a nuestro vendedor.</strong><br><br>`;
+                textoRespuesta += `<strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Ver otros destinos disponibles<br><br><strong>Escriba un número:</strong>`;
+                
+                const botMessage = {
+                  id: Date.now() + 1,
+                  text: textoRespuesta,
+                  sender: 'bot',
+                  timestamp: new Date().toLocaleTimeString(),
+                  type: 'envios',
+                  opcionesNumeradas: true
+                };
+                setMessages(prev => [...prev, botMessage]);
+                setCurrentState('menu_principal');
+                setIsTyping(false);
+                return;
+              }
+            }
+          }
+        }
+        
         // Si pregunta por productos, mostrar productos reales
         if (preguntaProductos) {
           const categoriasData = await chatbotService.obtenerCategorias();
@@ -178,22 +247,27 @@ const ChatBot = () => {
           }
         }
         
-        // Si pregunta por envíos, iniciar flujo de departamentos
-        if (preguntaEnvios && currentState !== 'menu_envio_departamento' && currentState !== 'menu_envio_ciudad') {
+        // Si pregunta genéricamente por envíos nacionales (sin mencionar lugar específico)
+        const preguntaEnviosNacionales = /envíos? nacionales?|a qué partes? hacen envíos?|dónde hacen envíos?|donde hacen envios?|qué lugares? hacen envíos?|que lugares hacen envios?/i.test(mensajeLimpio);
+        
+        if (preguntaEnvios && preguntaEnviosNacionales && currentState !== 'menu_envio_departamento' && currentState !== 'menu_envio_ciudad') {
           const departamentosData = await chatbotService.obtenerDepartamentos();
           
           if (departamentosData.success && departamentosData.departamentos.length > 0) {
             setDepartamentos(departamentosData.departamentos);
             
-            let textoEnvios = '<strong>🚚 ENVÍOS POR SHALOM AÉREO</strong><br><br>';
-            textoEnvios += 'Trabajamos exclusivamente con Shalom Aéreo para envíos a nivel nacional.<br><br>';
-            textoEnvios += '<strong>¿A qué departamento desea enviar?</strong><br><br>';
+            let textoEnvios = '<strong>🚚 ENVÍOS NACIONALES</strong><br><br>';
+            textoEnvios += 'Sí, hacemos envíos a nivel nacional.<br><br>';
+            textoEnvios += '<strong>Departamentos disponibles:</strong><br><br>';
             
             departamentosData.departamentos.forEach((dept, idx) => {
               textoEnvios += `${idx + 1}. ${dept}<br>`;
             });
             
-            textoEnvios += '<br><strong>Escriba el nombre del departamento o un número:</strong>';
+            textoEnvios += `<br><strong>Total: ${departamentosData.departamentos.length} departamentos disponibles.</strong><br><br>`;
+            textoEnvios += 'Puedes elegir entre envío aéreo (Shalom Aéreo) o terrestre.<br><br>';
+            textoEnvios += '<strong>💡 Para consultar ciudades disponibles de un departamento específico, pregunta por ese departamento.</strong><br><br>';
+            textoEnvios += '<strong>Opciones:</strong><br><br>1.- 📞 Contactar vendedor<br>2.- 🏠 Volver al menú principal<br><br><strong>Escriba un número:</strong>';
             
             const botMessage = {
               id: Date.now() + 1,
@@ -201,10 +275,10 @@ const ChatBot = () => {
               sender: 'bot',
               timestamp: new Date().toLocaleTimeString(),
               type: 'envios',
-              opcionesNumeradas: false
+              opcionesNumeradas: true
             };
             setMessages(prev => [...prev, botMessage]);
-            setCurrentState('menu_envio_departamento');
+            setCurrentState('menu_principal');
             setIsTyping(false);
             return;
           }

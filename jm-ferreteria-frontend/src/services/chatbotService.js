@@ -713,11 +713,14 @@ INSTRUCCIONES:
    - Responde que SÍ, hacemos envíos a nivel nacional
    - Muestra SOLO la lista de departamentos disponibles (la información está en el contexto)
    - NO muestres ciudades, solo departamentos
-6. Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento específico (como Pasco, Cusco, Lima, etc.):
-   - Responde que SÍ, hacemos envíos a ese departamento
+6. Si pregunta "¿hacen envíos a [LUGAR]?" o menciona un lugar específico (como Sandia, Pasco, Cusco, Lima, etc.):
+   - PRIMERO verifica si ese lugar está en la lista de departamentos o ciudades disponibles
+   - Si SÍ está disponible: Responde "SÍ, hacemos envíos a [LUGAR]" y muestra las ciudades/provincias de ese departamento
+   - Si NO está disponible: Responde "No, actualmente no hacemos envíos a [LUGAR]" y ofrece contactar al vendedor
    - Muestra SOLO las ciudades/provincias de ESE departamento (la información está en el contexto)
    - NO menciones otros departamentos, solo el que preguntaron
    - Menciona que puede elegir entre envío aéreo o terrestre
+   - IMPORTANTE: Responde DIRECTAMENTE, no muestres la lista de departamentos si mencionaron un lugar específico
 7. Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?":
    - Responde que SÍ, hacemos envíos a todas las provincias de Puno
    - Muestra TODAS las provincias de Puno disponibles (la información está en el contexto)
@@ -743,7 +746,11 @@ INSTRUCCIONES:
 IMPORTANTE: 
 - Proporciona respuestas COMPLETAS y DETALLADAS basadas en la información de la base de datos
 - Si pregunta "¿hacen envíos nacionales?" o "¿a qué partes hacen envíos?", muestra SOLO la lista de departamentos (no ciudades)
-- Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" (ej: Pasco, Cusco), muestra SOLO las ciudades de ESE departamento, no otros
+- Si pregunta "¿hacen envíos a [LUGAR]?" (ej: Sandia, Pasco, Cusco):
+  * Responde DIRECTAMENTE si se envía o no a ese lugar
+  * Si SÍ se envía: muestra las ciudades de ese departamento
+  * Si NO se envía: di claramente que no se envía a ese lugar
+  * NO muestres la lista de departamentos si mencionaron un lugar específico
 - Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?", muestra TODAS las provincias de Puno
 - Si pregunta por productos, muestra algunos productos y sugiere ver más en el catálogo o contactar directamente
 - Si pregunta "¿venden [PRODUCTO]?", busca en la lista y si no está, sugiere el catálogo o contacto directo
