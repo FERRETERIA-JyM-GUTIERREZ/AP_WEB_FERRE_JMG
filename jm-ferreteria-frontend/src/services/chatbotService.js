@@ -11,8 +11,8 @@ class ChatbotService {
     });
     // API Key de Google Gemini (configurar en variables de entorno)
     this.geminiApiKey = process.env.REACT_APP_GEMINI_API_KEY || '';
-    // Usar gemini-1.5-flash-8b (modelo disponible en REST API 2025)
-    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent';
+    // Usar gemini-2.5-flash (modelo estable disponible según la lista de modelos)
+    this.geminiApiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   }
 
   // Obtener datos reales de la empresa
@@ -488,10 +488,13 @@ IMPORTANTE: Si el usuario quiere ver productos, categorías o hacer una compra, 
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
 
       // Lista de modelos a probar en orden de preferencia
-      // IMPORTANTE: Solo modelos disponibles en REST API 2025 (los -002 ya no funcionan)
+      // Modelos verificados disponibles según la lista de la API
       const modelosAPrueba = [
-        { version: 'v1beta', model: 'gemini-1.5-flash-8b' },           // Modelo principal disponible
-        { version: 'v1beta', model: 'gemini-1.5-pro-exp-0826' }        // Modelo experimental alternativo
+        { version: 'v1beta', model: 'gemini-2.5-flash' },              // Modelo estable recomendado
+        { version: 'v1beta', model: 'gemini-2.0-flash-001' },         // Versión estable 2.0
+        { version: 'v1beta', model: 'gemini-2.5-pro' },               // Modelo más potente
+        { version: 'v1beta', model: 'gemini-flash-latest' },          // Última versión
+        { version: 'v1beta', model: 'gemini-2.0-flash' }              // Alternativa 2.0
       ];
 
       let lastError = null;
