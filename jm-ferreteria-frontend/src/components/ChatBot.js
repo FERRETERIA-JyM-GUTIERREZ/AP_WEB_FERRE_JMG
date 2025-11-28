@@ -29,6 +29,7 @@ const ChatBot = () => {
   const [synthesisSupported, setSynthesisSupported] = useState(false);
   const recognitionRef = useRef(null);
   const synthesisRef = useRef(null);
+  const lastTranscriptRef = useRef('');
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -122,6 +123,7 @@ const ChatBot = () => {
       
       recognitionRef.current.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
+        lastTranscriptRef.current = transcript;
         setInput(transcript);
         setIsListening(false);
         // Enviar el mensaje automáticamente después de reconocer
@@ -133,10 +135,19 @@ const ChatBot = () => {
       recognitionRef.current.onerror = (event) => {
         console.error('Error en reconocimiento de voz:', event.error);
         setIsListening(false);
+        lastTranscriptRef.current = '';
       };
       
       recognitionRef.current.onend = () => {
         setIsListening(false);
+        // Si hay texto reconocido cuando termina el reconocimiento, enviarlo automáticamente
+        const transcript = lastTranscriptRef.current.trim();
+        if (transcript && transcript.length > 0) {
+          setTimeout(() => {
+            sendMessageFromVoice(transcript);
+            lastTranscriptRef.current = '';
+          }, 100);
+        }
       };
     }
     
