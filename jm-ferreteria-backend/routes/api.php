@@ -174,6 +174,46 @@ Route::get('/verificar-agencias/{clave}', function ($clave) {
     }
 });
 
+// Ruta temporal para eliminar provincias de Puno excepto Desaguadero (ELIMINAR DESPUÉS DE USAR)
+Route::get('/eliminar-puno-excepto-desaguadero/{clave}', function ($clave) {
+    if ($clave !== 'jym2024ferreteria') {
+        return response()->json(['error' => 'Clave incorrecta'], 403);
+    }
+    
+    try {
+        // Eliminar todas las agencias de Puno excepto Desaguadero
+        $eliminadas = \App\Models\AgenciaEnvio::where('departamento', 'Puno')
+            ->where('transportista', 'Shalom')
+            ->where('ciudad', '!=', 'Desaguadero')
+            ->delete();
+        
+        // Verificar cuántas quedan
+        $agenciasPuno = \App\Models\AgenciaEnvio::where('departamento', 'Puno')
+            ->where('transportista', 'Shalom')
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Se eliminaron {$eliminadas} agencias de Puno (excepto Desaguadero)",
+            'agencias_restantes_puno' => $agenciasPuno->map(function($agencia) {
+                return [
+                    'id' => $agencia->id,
+                    'nombre' => $agencia->nombre,
+                    'ciudad' => $agencia->ciudad,
+                    'departamento' => $agencia->departamento
+                ];
+            }),
+            'total_agencias_puno' => $agenciasPuno->count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 // Búsqueda de clientes por DNI (pública)
 Route::get('/buscar-cliente-por-dni/{dni}', [VentaController::class, 'buscarClientePorDni']);
 
