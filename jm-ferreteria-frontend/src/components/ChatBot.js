@@ -30,6 +30,8 @@ const ChatBot = () => {
   const recognitionRef = useRef(null);
   const synthesisRef = useRef(null);
   const lastTranscriptRef = useRef('');
+  const messageSentRef = useRef(false);
+  const datosEmpresaRef = useRef(null);
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -41,6 +43,11 @@ const ChatBot = () => {
     };
     cargarDatos();
   }, []);
+
+  // Actualizar referencia cuando datosEmpresa cambie
+  useEffect(() => {
+    datosEmpresaRef.current = datosEmpresa;
+  }, [datosEmpresa]);
 
   // Mostrar mensaje de bienvenida al cargar la página por primera vez
   useEffect(() => {
@@ -107,6 +114,25 @@ const ChatBot = () => {
     if (!transcript.trim()) return;
     
     setInput(transcript);
+    
+    // Esperar a que datosEmpresa esté cargado antes de procesar
+    let intentos = 0;
+    const maxIntentos = 10; // Esperar máximo 5 segundos (10 * 500ms)
+    
+    while (!datosEmpresaRef.current && intentos < maxIntentos) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      intentos++;
+    }
+    
+    // Si después de esperar aún no hay datosEmpresa, cargar manualmente
+    if (!datosEmpresaRef.current) {
+      const resultado = await empresaService.obtenerDatosEmpresa();
+      if (resultado.success) {
+        setDatosEmpresa(resultado.data);
+        datosEmpresaRef.current = resultado.data;
+      }
+    }
+    
     await processMessage(transcript);
   };
 
@@ -126,9 +152,13 @@ const ChatBot = () => {
         lastTranscriptRef.current = transcript;
         setInput(transcript);
         setIsListening(false);
+        messageSentRef.current = false;
         // Enviar el mensaje automáticamente después de reconocer
         setTimeout(() => {
-          sendMessageFromVoice(transcript);
+          if (!messageSentRef.current) {
+            messageSentRef.current = true;
+            sendMessageFromVoice(transcript);
+          }
         }, 300);
       };
       
@@ -136,17 +166,24 @@ const ChatBot = () => {
         console.error('Error en reconocimiento de voz:', event.error);
         setIsListening(false);
         lastTranscriptRef.current = '';
+        messageSentRef.current = false;
       };
       
       recognitionRef.current.onend = () => {
         setIsListening(false);
-        // Si hay texto reconocido cuando termina el reconocimiento, enviarlo automáticamente
-        const transcript = lastTranscriptRef.current.trim();
-        if (transcript && transcript.length > 0) {
-          setTimeout(() => {
-            sendMessageFromVoice(transcript);
-            lastTranscriptRef.current = '';
-          }, 100);
+        // Solo enviar si no se envió desde onresult (por si acaso onresult no se ejecutó)
+        if (!messageSentRef.current) {
+          const transcript = lastTranscriptRef.current.trim();
+          if (transcript && transcript.length > 0) {
+            setTimeout(() => {
+              messageSentRef.current = true;
+              sendMessageFromVoice(transcript);
+              lastTranscriptRef.current = '';
+            }, 200);
+          }
+        } else {
+          // Limpiar la referencia si ya se envió
+          lastTranscriptRef.current = '';
         }
       };
     }
@@ -169,11 +206,14 @@ const ChatBot = () => {
       setIsListening(false);
     } else {
       try {
+        messageSentRef.current = false;
+        lastTranscriptRef.current = '';
         recognitionRef.current?.start();
         setIsListening(true);
       } catch (error) {
         console.error('Error al iniciar reconocimiento:', error);
         setIsListening(false);
+        messageSentRef.current = false;
       }
     }
   };
