@@ -495,7 +495,7 @@ class ChatbotService {
   }
 
   // Generar contexto para Gemini con información de la empresa
-  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null) {
+  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = []) {
     // Validar que datosEmpresa no sea null
     if (!datosEmpresa) {
       console.error('⚠️ datosEmpresa es null, usando datos por defecto');
@@ -616,6 +616,17 @@ class ChatbotService {
       enviosInfo += '- Entrega en terminal de transporte público\n';
       enviosInfo += '- Disponible para toda la región Puno\n';
     }
+    
+    // Si se mencionó un departamento específico, agregar información de sus ciudades
+    if (departamentoMencionado && ciudadesDelDepartamento.length > 0) {
+      enviosInfo += `\n\n📍 INFORMACIÓN DEL DEPARTAMENTO ${departamentoMencionado.toUpperCase()}:\n`;
+      enviosInfo += `Sí, hacemos envíos a ${departamentoMencionado}.\n\n`;
+      enviosInfo += `Ciudades/Provincias disponibles en ${departamentoMencionado}:\n`;
+      ciudadesDelDepartamento.forEach((ciudad, idx) => {
+        enviosInfo += `${idx + 1}. ${ciudad}\n`;
+      });
+      enviosInfo += `\nTotal: ${ciudadesDelDepartamento.length} ciudades/provincias disponibles para envío.\n`;
+    }
 
     const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre || 'JM Ferretería'}, una ferretería con ${datosEmpresa.añosExperiencia || '9+ años'} de experiencia.
 
@@ -665,22 +676,33 @@ INSTRUCCIONES:
 2. Si el usuario pregunta por productos, menciona TODAS las categorías disponibles y lista TODOS los productos de cada categoría con SUS PRECIOS (siempre muestra el precio si está disponible en la base de datos)
 3. Si pregunta por precios, SIEMPRE menciona los precios que están disponibles en la base de datos. Si un producto no tiene precio, di "Precio: Consultar"
 4. Si pregunta por entregas/envíos, explica TODOS los tipos disponibles:
-   - Envíos aéreos (Shalom Aéreo) a nivel nacional
-   - Envíos terrestres a nivel nacional
-   - Delivery local en Juliaca y alrededores
-   - Delivery a provincia de Puno por transporte público
-5. Proporciona información COMPLETA y DETALLADA de la base de datos, no respuestas genéricas
-6. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
-7. Si no sabes algo específico, ofrece contactar al vendedor
-8. Sé ESPECÍFICO y DETALLADO en tus respuestas
-9. NUNCA menciones gestión de inventarios, administración, o funciones internas del sistema
-10. Solo habla de productos, precios, envíos, contacto, horarios y servicios al cliente
+   - Envíos AÉREOS (Shalom Aéreo) a nivel nacional - reconoce palabras: "aéreo", "aereo", "avión", "avion", "shalom aéreo"
+   - Envíos TERRESTRES a nivel nacional - reconoce palabras: "terrestre", "bus", "ómnibus", "omnibus", "transporte terrestre"
+   - Delivery LOCAL en Juliaca y alrededores - reconoce palabras: "delivery", "domicilio", "local", "juliaca"
+   - Delivery a PROVINCIA DE PUNO por transporte público - reconoce palabras: "puno", "provincia", "transporte público", "transporte publico"
+5. Si el usuario pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento específico (como Cusco, Lima, Arequipa, etc.):
+   - Responde que SÍ, hacemos envíos a ese departamento
+   - Muestra TODAS las ciudades/provincias disponibles de ese departamento (la información está en el contexto)
+   - Menciona que puede elegir entre envío aéreo o terrestre según prefiera
+6. RECONOCE estos términos relacionados con envíos:
+   - "aéreo", "aereo", "avión", "avion", "shalom" = Envío aéreo
+   - "terrestre", "bus", "ómnibus", "omnibus" = Envío terrestre
+   - "delivery", "domicilio" = Delivery local
+   - "puno", "provincia" = Delivery a provincia de Puno
+7. Proporciona información COMPLETA y DETALLADA de la base de datos, no respuestas genéricas
+8. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
+9. Si no sabes algo específico, ofrece contactar al vendedor
+10. Sé ESPECÍFICO y DETALLADO en tus respuestas
+11. NUNCA menciones gestión de inventarios, administración, o funciones internas del sistema
+12. Solo habla de productos, precios, envíos, contacto, horarios y servicios al cliente
 
 IMPORTANTE: 
 - Proporciona respuestas COMPLETAS y DETALLADAS basadas en la información de la base de datos
 - Si el usuario pregunta por productos, menciona TODAS las categorías y lista TODOS los productos con SUS PRECIOS
-- Si pregunta por envíos, explica TODOS los tipos disponibles (aéreo, terrestre, delivery local, delivery a provincia)
+- Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento, responde SÍ y muestra TODAS las ciudades/provincias disponibles de ese departamento que están en el contexto
+- Si pregunta por envíos, explica TODOS los tipos disponibles y RECONOCE los términos: "aéreo", "terrestre", "delivery", "domicilio", "puno"
 - SIEMPRE muestra los precios de los productos si están en la base de datos
+- Cuando mencionen un departamento, usa la información de ciudades que está en el contexto para responder
 - NUNCA menciones gestión de inventarios, administración o funciones internas
 - Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios`;
 
@@ -688,7 +710,7 @@ IMPORTANTE:
   }
 
   // Procesar mensaje con Google Gemini AI
-  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null) {
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = []) {
     // Verificar si hay API key configurada
     if (!this.geminiApiKey || this.geminiApiKey === '') {
       console.warn('⚠️ Gemini API Key no configurada');
@@ -699,8 +721,8 @@ IMPORTANTE:
     }
 
     try {
-      // Generar contexto con información de la empresa, productos, categorías y envíos
-      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData);
+      // Generar contexto con información de la empresa, productos, categorías, envíos y departamento mencionado
+      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData, departamentoMencionado, ciudadesDelDepartamento);
       
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;

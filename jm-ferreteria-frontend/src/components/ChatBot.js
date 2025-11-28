@@ -311,6 +311,27 @@ const ChatBot = () => {
           return;
         }
         
+        // Detectar si mencionan un departamento específico
+        const departamentosData = await chatbotService.obtenerDepartamentos();
+        let departamentoMencionado = null;
+        let ciudadesDelDepartamento = [];
+        
+        if (departamentosData.success && departamentosData.departamentos.length > 0) {
+          // Buscar si mencionan algún departamento en el mensaje
+          const mensajeLower = mensajeLimpio.toLowerCase();
+          departamentoMencionado = departamentosData.departamentos.find(dept => 
+            mensajeLower.includes(dept.toLowerCase()) || dept.toLowerCase().includes(mensajeLower.split(' ').find(word => word.length > 3) || '')
+          );
+          
+          // Si encontraron un departamento, obtener sus ciudades
+          if (departamentoMencionado) {
+            const ciudadesData = await chatbotService.obtenerCiudadesPorDepartamento(departamentoMencionado);
+            if (ciudadesData.success && ciudadesData.ciudades.length > 0) {
+              ciudadesDelDepartamento = ciudadesData.ciudades;
+            }
+          }
+        }
+        
         // Obtener historial reciente para contexto
         const historialReciente = messages.slice(-10).map(msg => ({
           sender: msg.sender,
@@ -322,14 +343,16 @@ const ChatBot = () => {
         const categoriasData = await chatbotService.obtenerCategorias();
         const destinosEnvioData = await chatbotService.obtenerDestinosEnvio();
         
-        // Procesar con Gemini
+        // Procesar con Gemini (pasar información del departamento si se detectó)
         const respuestaGemini = await chatbotService.procesarConGemini(
           mensajeLimpio, 
           datosEmpresa, 
           historialReciente,
           productosData,
           categoriasData,
-          destinosEnvioData
+          destinosEnvioData,
+          departamentoMencionado,
+          ciudadesDelDepartamento
         );
         
         if (respuestaGemini.success) {
