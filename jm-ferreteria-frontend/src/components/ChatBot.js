@@ -32,6 +32,7 @@ const ChatBot = () => {
   const lastTranscriptRef = useRef('');
   const messageSentRef = useRef(false);
   const datosEmpresaRef = useRef(null);
+  const processMessageRef = useRef(null);
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -113,8 +114,6 @@ const ChatBot = () => {
   const sendMessageFromVoice = async (transcript) => {
     if (!transcript.trim()) return;
     
-    setInput(transcript);
-    
     // Esperar a que datosEmpresa esté cargado antes de procesar
     let intentos = 0;
     const maxIntentos = 10; // Esperar máximo 5 segundos (10 * 500ms)
@@ -133,7 +132,23 @@ const ChatBot = () => {
       }
     }
     
-    await processMessage(transcript);
+    // Crear mensaje del usuario y agregarlo a la lista
+    const userMessage = {
+      id: Date.now(),
+      text: transcript,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    
+    // Procesar el mensaje usando la referencia
+    if (processMessageRef.current) {
+      await processMessageRef.current(transcript);
+    } else {
+      console.error('processMessage no está disponible aún');
+    }
   };
 
   // Verificar soporte de APIs de voz al montar
@@ -148,18 +163,24 @@ const ChatBot = () => {
       recognitionRef.current.interimResults = false;
       
       recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
+        const transcript = event.results[0][0].transcript.trim();
+        if (!transcript) return;
+        
         lastTranscriptRef.current = transcript;
         setInput(transcript);
         setIsListening(false);
-        messageSentRef.current = false;
+        messageSentRef.current = true; // Marcar como enviado inmediatamente
+        
         // Enviar el mensaje automáticamente después de reconocer
-        setTimeout(() => {
-          if (!messageSentRef.current) {
-            messageSentRef.current = true;
-            sendMessageFromVoice(transcript);
+        // Usar setTimeout para asegurar que el estado se actualice primero
+        setTimeout(async () => {
+          try {
+            await sendMessageFromVoice(transcript);
+          } catch (error) {
+            console.error('Error al enviar mensaje de voz:', error);
+            messageSentRef.current = false;
           }
-        }, 300);
+        }, 200);
       };
       
       recognitionRef.current.onerror = (event) => {
@@ -171,18 +192,17 @@ const ChatBot = () => {
       
       recognitionRef.current.onend = () => {
         setIsListening(false);
-        // Solo enviar si no se envió desde onresult (por si acaso onresult no se ejecutó)
-        if (!messageSentRef.current) {
-          const transcript = lastTranscriptRef.current.trim();
-          if (transcript && transcript.length > 0) {
-            setTimeout(() => {
-              messageSentRef.current = true;
-              sendMessageFromVoice(transcript);
-              lastTranscriptRef.current = '';
-            }, 200);
-          }
+        
+        // Si hay transcript y no se ha enviado desde onresult, enviarlo ahora
+        const transcript = lastTranscriptRef.current.trim();
+        if (transcript && transcript.length > 0 && !messageSentRef.current) {
+          messageSentRef.current = true;
+          setTimeout(() => {
+            sendMessageFromVoice(transcript);
+            lastTranscriptRef.current = '';
+          }, 200);
         } else {
-          // Limpiar la referencia si ya se envió
+          // Limpiar la referencia
           lastTranscriptRef.current = '';
         }
       };
@@ -795,6 +815,9 @@ const ChatBot = () => {
       setIsTyping(false);
     }, 800);
   };
+
+  // Actualizar referencia de processMessage en cada render
+  processMessageRef.current = processMessage;
 
   // Manejar menú principal
   const manejarMenuPrincipal = async (numero) => {
