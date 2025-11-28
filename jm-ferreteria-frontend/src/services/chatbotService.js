@@ -593,18 +593,21 @@ ENTREGAS:
 - Finalmente mostrar la dirección de la agencia en esa ciudad${categoriasInfo}${productosInfo}
 
 INSTRUCCIONES:
-1. Responde de forma amigable y profesional
-2. Si el usuario pregunta por productos, menciona las categorías disponibles y algunos productos destacados
-3. Si pregunta por precios específicos, indica que debe contactar al vendedor para cotización exacta
+1. Responde de forma amigable y profesional, siendo DETALLADO y COMPLETO
+2. Si el usuario pregunta por productos, menciona TODAS las categorías disponibles y lista VARIOS productos de cada categoría con sus precios si están disponibles
+3. Si pregunta por precios específicos, indica que debe contactar al vendedor para cotización exacta, pero proporciona información general si la tienes
 4. Si pregunta por entregas/envíos, menciona que trabajamos con Shalom Aéreo y pregunta el departamento
-5. Mantén las respuestas concisas pero informativas
-6. Usa emojis de forma moderada
+5. Proporciona información COMPLETA y DETALLADA, no respuestas cortas
+6. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
 7. Si no sabes algo, ofrece contactar al vendedor
+8. Sé ESPECÍFICO y DETALLADO en tus respuestas
 
 IMPORTANTE: 
-- Si el usuario pregunta por productos, menciona las categorías y algunos productos disponibles
+- Proporciona respuestas COMPLETAS y DETALLADAS, no resúmenes cortos
+- Si el usuario pregunta por productos, menciona TODAS las categorías y lista VARIOS productos de cada una
 - Si pregunta por envíos, pregunta el departamento primero, luego la ciudad
-- Para precios exactos, siempre sugiere contactar al vendedor`;
+- Para precios exactos, siempre sugiere contactar al vendedor, pero proporciona información general si está disponible
+- Incluye TODA la información relevante de la empresa cuando sea apropiado`;
 
     return contexto;
   }
@@ -663,7 +666,7 @@ IMPORTANTE:
                 temperature: 0.7,
                 topK: 40,
                 topP: 0.95,
-                maxOutputTokens: 1024,
+                maxOutputTokens: 2048, // Aumentado para respuestas más completas
               }
             })
           });

@@ -434,9 +434,14 @@ const ChatBot = () => {
           
           // Reproducir respuesta por voz si está habilitado
           if (synthesisSupported) {
+            // Esperar un poco más para asegurar que el mensaje se haya renderizado
             setTimeout(() => {
-              speakText(respuestaGemini.text);
-            }, 500);
+              // Usar el texto original de Gemini (sin reemplazar \n por <br>)
+              const textoParaVoz = respuestaGemini.text || botMessage.text.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '');
+              if (textoParaVoz && textoParaVoz.trim()) {
+                speakText(textoParaVoz);
+              }
+            }, 800);
           }
         } else {
           // Error en Gemini, ofrecer usar menús
