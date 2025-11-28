@@ -195,52 +195,75 @@ const ChatBot = () => {
         }
         
         // Detectar si mencionan una ciudad específica y obtener información detallada
+        // PRIORIDAD: Buscar primero en agencias (más ciudades disponibles), luego en destinos
         let ciudadMencionada = null;
         let tipoEnvioCiudad = null;
         let agenciasCiudad = [];
+        let tieneEnvioAereo = false; // Solo para ciudades principales (capitales de departamento)
         
         if (preguntaEnvios) {
-          // Obtener destinos y agencias para buscar ciudades específicas
-          const destinosData = await chatbotService.obtenerDestinosEnvio();
+          // PRIMERO: Buscar en ciudades con agencias (prioridad porque tiene más ciudades)
           const ciudadesData = await chatbotService.obtenerCiudadesConAgencias();
           
-          // Buscar si mencionan una ciudad específica en destinos_envio
-          if (destinosData.success && destinosData.destinos.length > 0) {
-            const ciudadEncontrada = destinosData.destinos.find(destino => {
-              const nombreDestino = destino.nombre.toLowerCase();
-              return mensajeLower.includes(nombreDestino) || nombreDestino.includes(mensajeLower.split(' ').find(word => word.length > 3) || '');
-            });
-            
-            if (ciudadEncontrada) {
-              ciudadMencionada = ciudadEncontrada.nombre;
-              tipoEnvioCiudad = ciudadEncontrada.tipo_envio; // 'aereo' o 'terrestre'
-              
-              // Obtener agencias de esa ciudad
-              const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada.nombre);
-              if (agenciasData.success && agenciasData.agencias.length > 0) {
-                agenciasCiudad = agenciasData.agencias;
-              }
-            }
-          }
-          
-          // Si no se encontró en destinos, buscar en ciudades con agencias
-          if (!ciudadMencionada && ciudadesData.success && ciudadesData.ciudades.length > 0) {
+          if (ciudadesData.success && ciudadesData.ciudades.length > 0) {
             const ciudadEncontrada = ciudadesData.ciudades.find(ciudad => {
               const nombreCiudad = ciudad.ciudad.toLowerCase();
-              return mensajeLower.includes(nombreCiudad) || nombreCiudad.includes(mensajeLower.split(' ').find(word => word.length > 3) || '');
+              const palabrasMensaje = mensajeLower.split(' ').filter(word => word.length > 3);
+              return mensajeLower.includes(nombreCiudad) || nombreCiudad.includes(palabrasMensaje[0] || '');
             });
             
             if (ciudadEncontrada) {
               ciudadMencionada = ciudadEncontrada.ciudad;
               
-              // Obtener agencias de esa ciudad
+              // Obtener agencias de esa ciudad (Shalom terrestre)
               const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada.ciudad);
               if (agenciasData.success && agenciasData.agencias.length > 0) {
                 agenciasCiudad = agenciasData.agencias;
               }
               
-              // Si no está en destinos_envio, asumir que es terrestre (ya que las agencias son de Shalom terrestre)
+              // Por defecto es terrestre (90% de preferencia)
               tipoEnvioCiudad = 'terrestre';
+              
+              // Verificar si también tiene envío aéreo (solo para capitales de departamento)
+              const destinosData = await chatbotService.obtenerDestinosEnvio();
+              if (destinosData.success && destinosData.destinos.length > 0) {
+                const destinoAereo = destinosData.destinos.find(d => 
+                  d.nombre.toLowerCase() === ciudadEncontrada.ciudad.toLowerCase() && 
+                  d.tipo_envio === 'aereo'
+                );
+                if (destinoAereo) {
+                  tieneEnvioAereo = true; // Tiene ambos, pero priorizamos terrestre
+                }
+              }
+            }
+          }
+          
+          // SEGUNDO: Si no se encontró en agencias, buscar en destinos_envio (solo capitales)
+          if (!ciudadMencionada) {
+            const destinosData = await chatbotService.obtenerDestinosEnvio();
+            
+            if (destinosData.success && destinosData.destinos.length > 0) {
+              const ciudadEncontrada = destinosData.destinos.find(destino => {
+                const nombreDestino = destino.nombre.toLowerCase();
+                const palabrasMensaje = mensajeLower.split(' ').filter(word => word.length > 3);
+                return mensajeLower.includes(nombreDestino) || nombreDestino.includes(palabrasMensaje[0] || '');
+              });
+              
+              if (ciudadEncontrada) {
+                ciudadMencionada = ciudadEncontrada.nombre;
+                tipoEnvioCiudad = ciudadEncontrada.tipo_envio; // 'aereo' o 'terrestre'
+                
+                // Intentar obtener agencias de esa ciudad (puede que tenga agencias terrestres también)
+                const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada.nombre);
+                if (agenciasData.success && agenciasData.agencias.length > 0) {
+                  agenciasCiudad = agenciasData.agencias;
+                  // Si tiene agencias, también tiene terrestre
+                  if (tipoEnvioCiudad === 'aereo') {
+                    tieneEnvioAereo = true;
+                    tipoEnvioCiudad = 'terrestre'; // Priorizar terrestre
+                  }
+                }
+              }
             }
           }
         }
@@ -496,7 +519,8 @@ const ChatBot = () => {
           ciudadMencionada,
           tipoEnvioCiudad,
           agenciasCiudad,
-          catalogoUrl
+          catalogoUrl,
+          tieneEnvioAereo
         );
         
         if (respuestaGemini.success) {
