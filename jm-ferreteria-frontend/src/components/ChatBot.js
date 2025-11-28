@@ -317,9 +317,10 @@ const ChatBot = () => {
           text: msg.sender === 'user' ? msg.text : msg.text.replace(/<[^>]*>/g, '') // Remover HTML para contexto
         }));
         
-        // Obtener productos y categorías para contexto
+        // Obtener productos, categorías y destinos de envío para contexto
         const productosData = await chatbotService.obtenerProductos();
         const categoriasData = await chatbotService.obtenerCategorias();
+        const destinosEnvioData = await chatbotService.obtenerDestinosEnvio();
         
         // Procesar con Gemini
         const respuestaGemini = await chatbotService.procesarConGemini(
@@ -327,7 +328,8 @@ const ChatBot = () => {
           datosEmpresa, 
           historialReciente,
           productosData,
-          categoriasData
+          categoriasData,
+          destinosEnvioData
         );
         
         if (respuestaGemini.success) {

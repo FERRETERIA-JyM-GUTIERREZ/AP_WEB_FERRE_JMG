@@ -261,6 +261,24 @@ class ChatbotService {
     }
   }
 
+  // Obtener destinos de envío (aéreos y terrestres)
+  async obtenerDestinosEnvio() {
+    try {
+      const response = await this.api.get('/envios/destinos');
+      if (response.data.success) {
+        return {
+          success: true,
+          destinos: response.data.data || [],
+          total: response.data.data?.length || 0
+        };
+      }
+      return { success: false, destinos: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo destinos de envío:', error);
+      return { success: false, destinos: [], total: 0 };
+    }
+  }
+
   // Manejar opciones de contacto
   manejarOpcionContacto(numero, datosEmpresa) {
     switch (numero) {
@@ -477,7 +495,7 @@ class ChatbotService {
   }
 
   // Generar contexto para Gemini con información de la empresa
-  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null) {
+  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null) {
     // Validar que datosEmpresa no sea null
     if (!datosEmpresa) {
       console.error('⚠️ datosEmpresa es null, usando datos por defecto');
@@ -506,6 +524,7 @@ class ChatbotService {
     
     let productosInfo = '';
     let categoriasInfo = '';
+    let enviosInfo = '';
     
     // Si no se proporcionaron productos/categorías, intentar obtenerlos
     if (!productosData) {
@@ -513,6 +532,9 @@ class ChatbotService {
     }
     if (!categoriasData) {
       categoriasData = await this.obtenerCategorias();
+    }
+    if (!destinosEnvioData) {
+      destinosEnvioData = await this.obtenerDestinosEnvio();
     }
     
     // Construir información de productos y categorías
@@ -534,19 +556,65 @@ class ChatbotService {
       });
       
       if (Object.keys(productosPorCategoria).length > 0) {
-        productosInfo = '\n\nPRODUCTOS DISPONIBLES (por categoría):\n';
+        productosInfo = '\n\nPRODUCTOS DISPONIBLES (por categoría con precios):\n';
         Object.keys(productosPorCategoria).forEach(categoria => {
           productosInfo += `\n${categoria}:\n`;
-          productosPorCategoria[categoria].slice(0, 10).forEach(producto => {
+          productosPorCategoria[categoria].forEach(producto => {
             if (producto && producto.nombre) {
-              productosInfo += `- ${producto.nombre}${producto.precio ? ` (S/ ${producto.precio})` : ''}\n`;
+              // SIEMPRE mostrar precio si está disponible
+              const precioTexto = producto.precio ? ` - Precio: S/ ${producto.precio}` : ' - Precio: Consultar';
+              productosInfo += `- ${producto.nombre}${precioTexto}\n`;
             }
           });
-          if (productosPorCategoria[categoria].length > 10) {
-            productosInfo += `... y ${productosPorCategoria[categoria].length - 10} productos más\n`;
-          }
         });
       }
+    }
+
+    // Construir información de envíos
+    if (destinosEnvioData && destinosEnvioData.success && destinosEnvioData.destinos && destinosEnvioData.destinos.length > 0) {
+      const enviosAereos = destinosEnvioData.destinos.filter(d => d.tipo_envio === 'aereo');
+      const enviosTerrestres = destinosEnvioData.destinos.filter(d => d.tipo_envio === 'terrestre');
+      
+      enviosInfo = '\n\nOPCIONES DE ENVÍO DISPONIBLES:\n';
+      
+      enviosInfo += '\n✈️ ENVÍOS AÉREOS (Shalom Aéreo):\n';
+      enviosInfo += '- Disponible a nivel nacional\n';
+      enviosInfo += '- Entrega en terminal de agencia Shalom\n';
+      if (enviosAereos.length > 0) {
+        enviosInfo += `- ${enviosAereos.length} destinos aéreos disponibles\n`;
+      }
+      
+      enviosInfo += '\n🚚 ENVÍOS TERRESTRES:\n';
+      enviosInfo += '- Disponible a nivel nacional\n';
+      enviosInfo += '- Entrega en terminal de transporte\n';
+      if (enviosTerrestres.length > 0) {
+        enviosInfo += `- ${enviosTerrestres.length} destinos terrestres disponibles\n`;
+      }
+      
+      enviosInfo += '\n🚛 DELIVERY LOCAL:\n';
+      enviosInfo += '- Entrega a domicilio en Juliaca y alrededores\n';
+      enviosInfo += '- Tiempo: 24-48 horas\n';
+      enviosInfo += '- Costo según distancia\n';
+      
+      enviosInfo += '\n🚌 DELIVERY A PROVINCIA DE PUNO:\n';
+      enviosInfo += '- Entrega en terminal de transporte público\n';
+      enviosInfo += '- Disponible para toda la región Puno\n';
+      enviosInfo += '- El cliente recoge en el terminal final\n';
+    } else {
+      // Información por defecto si no hay datos
+      enviosInfo = '\n\nOPCIONES DE ENVÍO DISPONIBLES:\n';
+      enviosInfo += '\n✈️ ENVÍOS AÉREOS (Shalom Aéreo):\n';
+      enviosInfo += '- Disponible a nivel nacional\n';
+      enviosInfo += '- Entrega en terminal de agencia Shalom\n';
+      enviosInfo += '\n🚚 ENVÍOS TERRESTRES:\n';
+      enviosInfo += '- Disponible a nivel nacional\n';
+      enviosInfo += '- Entrega en terminal de transporte\n';
+      enviosInfo += '\n🚛 DELIVERY LOCAL:\n';
+      enviosInfo += '- Entrega a domicilio en Juliaca y alrededores\n';
+      enviosInfo += '- Tiempo: 24-48 horas\n';
+      enviosInfo += '\n🚌 DELIVERY A PROVINCIA DE PUNO:\n';
+      enviosInfo += '- Entrega en terminal de transporte público\n';
+      enviosInfo += '- Disponible para toda la región Puno\n';
     }
 
     const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre || 'JM Ferretería'}, una ferretería con ${datosEmpresa.añosExperiencia || '9+ años'} de experiencia.
@@ -586,34 +654,41 @@ MÉTODOS DE PAGO:
 - Transferencias bancarias
 - Yape, Plin, Billetera digital
 
-ENTREGAS:
-- Para envíos a nivel nacional, trabajamos exclusivamente con Shalom Aéreo
-- Si el cliente pregunta por envíos, debes preguntarle a qué departamento desea enviar
-- Luego mostrar las ciudades/distritos disponibles de ese departamento
-- Finalmente mostrar la dirección de la agencia en esa ciudad${categoriasInfo}${productosInfo}
+TIPOS DE ENVÍO DISPONIBLES:
+1. ✈️ ENVÍOS AÉREOS (Shalom Aéreo): A nivel nacional, entrega en terminal de agencia Shalom
+2. 🚚 ENVÍOS TERRESTRES: A nivel nacional, entrega en terminal de transporte
+3. 🚛 DELIVERY LOCAL: Entrega a domicilio en Juliaca y alrededores (24-48 horas)
+4. 🚌 DELIVERY A PROVINCIA DE PUNO: Entrega en terminal de transporte público para toda la región Puno${enviosInfo}${categoriasInfo}${productosInfo}
 
 INSTRUCCIONES:
 1. Responde de forma amigable y profesional, siendo DETALLADO y COMPLETO
-2. Si el usuario pregunta por productos, menciona TODAS las categorías disponibles y lista VARIOS productos de cada categoría con sus precios si están disponibles
-3. Si pregunta por precios específicos, indica que debe contactar al vendedor para cotización exacta, pero proporciona información general si la tienes
-4. Si pregunta por entregas/envíos, menciona que trabajamos con Shalom Aéreo y pregunta el departamento
-5. Proporciona información COMPLETA y DETALLADA, no respuestas cortas
+2. Si el usuario pregunta por productos, menciona TODAS las categorías disponibles y lista TODOS los productos de cada categoría con SUS PRECIOS (siempre muestra el precio si está disponible en la base de datos)
+3. Si pregunta por precios, SIEMPRE menciona los precios que están disponibles en la base de datos. Si un producto no tiene precio, di "Precio: Consultar"
+4. Si pregunta por entregas/envíos, explica TODOS los tipos disponibles:
+   - Envíos aéreos (Shalom Aéreo) a nivel nacional
+   - Envíos terrestres a nivel nacional
+   - Delivery local en Juliaca y alrededores
+   - Delivery a provincia de Puno por transporte público
+5. Proporciona información COMPLETA y DETALLADA de la base de datos, no respuestas genéricas
 6. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
-7. Si no sabes algo, ofrece contactar al vendedor
+7. Si no sabes algo específico, ofrece contactar al vendedor
 8. Sé ESPECÍFICO y DETALLADO en tus respuestas
+9. NUNCA menciones gestión de inventarios, administración, o funciones internas del sistema
+10. Solo habla de productos, precios, envíos, contacto, horarios y servicios al cliente
 
 IMPORTANTE: 
-- Proporciona respuestas COMPLETAS y DETALLADAS, no resúmenes cortos
-- Si el usuario pregunta por productos, menciona TODAS las categorías y lista VARIOS productos de cada una
-- Si pregunta por envíos, pregunta el departamento primero, luego la ciudad
-- Para precios exactos, siempre sugiere contactar al vendedor, pero proporciona información general si está disponible
-- Incluye TODA la información relevante de la empresa cuando sea apropiado`;
+- Proporciona respuestas COMPLETAS y DETALLADAS basadas en la información de la base de datos
+- Si el usuario pregunta por productos, menciona TODAS las categorías y lista TODOS los productos con SUS PRECIOS
+- Si pregunta por envíos, explica TODOS los tipos disponibles (aéreo, terrestre, delivery local, delivery a provincia)
+- SIEMPRE muestra los precios de los productos si están en la base de datos
+- NUNCA menciones gestión de inventarios, administración o funciones internas
+- Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios`;
 
     return contexto;
   }
 
   // Procesar mensaje con Google Gemini AI
-  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null) {
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null) {
     // Verificar si hay API key configurada
     if (!this.geminiApiKey || this.geminiApiKey === '') {
       console.warn('⚠️ Gemini API Key no configurada');
@@ -624,8 +699,8 @@ IMPORTANTE:
     }
 
     try {
-      // Generar contexto con información de la empresa, productos y categorías
-      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData);
+      // Generar contexto con información de la empresa, productos, categorías y envíos
+      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData);
       
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;
