@@ -939,7 +939,7 @@ IMPORTANTE:
   }
 
   // Procesar mensaje con Google Gemini AI
-  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '') {
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '', ciudadMencionada = null, tipoEnvioCiudad = null, agenciasCiudad = [], tieneEnvioAereo = false) {
     // Verificar si hay API key configurada
     if (!this.geminiApiKey || this.geminiApiKey === '') {
       console.warn('⚠️ Gemini API Key no configurada');
