@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaRobot, FaPhone, FaMapMarkerAlt, FaClock, FaCreditCard, FaTruck, FaShieldAlt, FaEnvelope, FaTimes, FaComments } from 'react-icons/fa';
+import { FaRobot, FaPhone, FaMapMarkerAlt, FaClock, FaCreditCard, FaTruck, FaShieldAlt, FaEnvelope, FaTimes, FaComments, FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa';
 import chatbotService from '../services/chatbotService';
 import { empresaService } from '../services/empresaService';
 
@@ -20,6 +20,13 @@ const ChatBot = () => {
   const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState(null);
   const [ciudades, setCiudades] = useState([]);
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState(null);
+  // Estados para reconocimiento de voz
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recognitionSupported, setRecognitionSupported] = useState(false);
+  const [synthesisSupported, setSynthesisSupported] = useState(false);
+  const recognitionRef = useRef(null);
+  const synthesisRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Cargar datos de la empresa al montar
@@ -31,6 +38,61 @@ const ChatBot = () => {
       }
     };
     cargarDatos();
+  }, []);
+
+  // Verificar soporte de APIs de voz al montar
+  useEffect(() => {
+    // Verificar Speech Recognition API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setRecognitionSupported(true);
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'es-PE'; // Español de Perú
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+        // Enviar automáticamente después de reconocer
+        setTimeout(() => {
+          if (transcript.trim()) {
+            sendMessageFromVoice(transcript);
+          }
+        }, 300);
+      };
+      
+      recognitionRef.current.onerror = (event) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        setIsListening(false);
+        if (event.error === 'no-speech') {
+          alert('No se detectó voz. Por favor, intente de nuevo.');
+        } else if (event.error === 'not-allowed') {
+          alert('Por favor, permita el acceso al micrófono en la configuración del navegador.');
+        }
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    // Verificar Speech Synthesis API
+    if ('speechSynthesis' in window) {
+      setSynthesisSupported(true);
+      synthesisRef.current = window.speechSynthesis;
+    }
+    
+    // Limpiar al desmontar
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (synthesisRef.current) {
+        synthesisRef.current.cancel();
+      }
+    };
   }, []);
 
   // Mostrar mensaje de bienvenida al cargar la página por primera vez
@@ -174,6 +236,13 @@ const ChatBot = () => {
             setMessages(prev => [...prev, botMessage]);
             setCurrentState('menu_productos');
             setIsTyping(false);
+            
+            // Reproducir respuesta por voz
+            if (synthesisSupported) {
+              setTimeout(() => {
+                speakText(textoProductos);
+              }, 500);
+            }
             return;
           }
         }
@@ -206,6 +275,13 @@ const ChatBot = () => {
             setMessages(prev => [...prev, botMessage]);
             setCurrentState('menu_envio_departamento');
             setIsTyping(false);
+            
+            // Reproducir respuesta por voz
+            if (synthesisSupported) {
+              setTimeout(() => {
+                speakText(textoEnvios);
+              }, 500);
+            }
             return;
           }
         }
@@ -243,6 +319,13 @@ const ChatBot = () => {
               setMessages(prev => [...prev, botMessage]);
               setCurrentState('menu_envio_ciudad');
               setIsTyping(false);
+              
+              // Reproducir respuesta por voz
+              if (synthesisSupported) {
+                setTimeout(() => {
+                  speakText(textoCiudades);
+                }, 500);
+              }
               return;
             }
           }
@@ -290,6 +373,13 @@ const ChatBot = () => {
               setMessages(prev => [...prev, botMessage]);
               setCurrentState('menu_principal');
               setIsTyping(false);
+              
+              // Reproducir respuesta por voz
+              if (synthesisSupported) {
+                setTimeout(() => {
+                  speakText(textoAgencias);
+                }, 500);
+              }
               return;
             }
           }
@@ -325,17 +415,32 @@ const ChatBot = () => {
             opcionesNumeradas: false
           };
           setMessages(prev => [...prev, botMessage]);
+          
+          // Reproducir respuesta por voz si está habilitado
+          if (synthesisSupported) {
+            setTimeout(() => {
+              speakText(respuestaGemini.text);
+            }, 500);
+          }
         } else {
           // Error en Gemini, ofrecer usar menús
+          const errorText = `🤖 ${respuestaGemini.error || 'No pude procesar tu mensaje.'}<br><br><strong>💡 Puedes usar el sistema de menús:</strong><br><br>1.- 🛍️ Ver productos<br>2.- 📞 Contacto<br>3.- 🕒 Horarios<br>4.- 📍 Ubicación<br>5.- 🚚 Entregas<br>6.- 🛡️ Garantía<br><br><strong>Escriba un número o intente otra pregunta:</strong>`;
           const errorMessage = {
             id: Date.now() + 1,
-            text: `🤖 ${respuestaGemini.error || 'No pude procesar tu mensaje.'}<br><br><strong>💡 Puedes usar el sistema de menús:</strong><br><br>1.- 🛍️ Ver productos<br>2.- 📞 Contacto<br>3.- 🕒 Horarios<br>4.- 📍 Ubicación<br>5.- 🚚 Entregas<br>6.- 🛡️ Garantía<br><br><strong>Escriba un número o intente otra pregunta:</strong>`,
+            text: errorText,
             sender: 'bot',
             timestamp: new Date().toLocaleTimeString(),
             type: 'error',
             opcionesNumeradas: true
           };
           setMessages(prev => [...prev, errorMessage]);
+          
+          // Reproducir respuesta por voz
+          if (synthesisSupported) {
+            setTimeout(() => {
+              speakText(errorText);
+            }, 500);
+          }
         }
       } catch (error) {
         console.error('Error al procesar con Gemini:', error);
@@ -350,6 +455,13 @@ const ChatBot = () => {
           opcionesNumeradas: true
         };
         setMessages(prev => [...prev, botMessage]);
+        
+        // Reproducir respuesta por voz
+        if (synthesisSupported) {
+          setTimeout(() => {
+            speakText(errorMessage.text);
+          }, 500);
+        }
       } finally {
         setIsTyping(false);
       }
@@ -407,6 +519,13 @@ const ChatBot = () => {
 
         setMessages(prev => [...prev, botMessage]);
         setCurrentState(respuesta.nuevoEstado || nuevoEstado);
+        
+        // Reproducir respuesta por voz
+        if (synthesisSupported) {
+          setTimeout(() => {
+            speakText(respuesta.text);
+          }, 500);
+        }
         
         // NO ejecutar acciones automáticamente al mostrar el menú
         // Las acciones se ejecutarán solo cuando el usuario seleccione una opción específica
@@ -758,6 +877,84 @@ const ChatBot = () => {
     processMessage(inputValue);
   };
 
+  // Enviar mensaje desde voz (sin limpiar input visualmente)
+  const sendMessageFromVoice = (text) => {
+    if (!text.trim() || isTyping) return;
+
+    const userMessage = {
+      id: Date.now(),
+      text: text,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    processMessage(text);
+  };
+
+  // Iniciar/detener reconocimiento de voz
+  const toggleListening = () => {
+    if (!recognitionSupported) {
+      alert('El reconocimiento de voz no está disponible en este navegador. Por favor, use Chrome o Edge.');
+      return;
+    }
+
+    if (isListening) {
+      // Detener reconocimiento
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      // Iniciar reconocimiento
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error al iniciar reconocimiento:', error);
+        setIsListening(false);
+      }
+    }
+  };
+
+  // Reproducir texto como voz
+  const speakText = (text) => {
+    if (!synthesisSupported) return;
+    
+    // Limpiar texto HTML para síntesis
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    
+    if (!cleanText) return;
+    
+    // Cancelar cualquier síntesis anterior
+    synthesisRef.current.cancel();
+    
+    setIsSpeaking(true);
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = 'es-PE';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    
+    utterance.onerror = (event) => {
+      console.error('Error en síntesis de voz:', event);
+      setIsSpeaking(false);
+    };
+    
+    synthesisRef.current.speak(utterance);
+  };
+
+  // Detener síntesis de voz
+  const stopSpeaking = () => {
+    if (synthesisRef.current) {
+      synthesisRef.current.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -918,26 +1115,65 @@ const ChatBot = () => {
 
           {/* Input area */}
           <div className="border-t border-orange-100 bg-gradient-to-b from-white to-gray-50 p-5 shadow-inner">
+            {/* Botón para detener voz si está hablando */}
+            {isSpeaking && (
+              <div className="mb-3 flex items-center justify-center">
+                <button
+                  onClick={stopSpeaking}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <FaMicrophoneSlash className="text-sm" />
+                  <span className="text-sm font-semibold">Detener voz</span>
+                </button>
+              </div>
+            )}
+            
             <div className="flex space-x-3">
+              {/* Botón de micrófono */}
+              {recognitionSupported && (
+                <button
+                  onClick={toggleListening}
+                  disabled={isTyping || isSpeaking}
+                  className={`${
+                    isListening 
+                      ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white px-4 py-3 rounded-xl disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center`}
+                  title={isListening ? 'Detener grabación' : 'Hablar (micrófono)'}
+                >
+                  {isListening ? (
+                    <FaMicrophoneSlash className="text-lg" />
+                  ) : (
+                    <FaMicrophone className="text-lg" />
+                  )}
+                </button>
+              )}
+              
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escriba tu pregunta o un número..."
+                placeholder={isListening ? "🎤 Escuchando..." : "Escriba tu pregunta o un número..."}
                 className="flex-1 border-2 border-orange-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm"
-                disabled={isTyping}
+                disabled={isTyping || isListening}
               />
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() || isTyping}
+                disabled={!input.trim() || isTyping || isListening}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
               >
                 Enviar
               </button>
             </div>
             <p className="text-xs text-gray-600 mt-3 text-center font-medium">
-              💡 Escriba tu pregunta en texto libre o un número para usar menús
+              {isListening ? (
+                <span className="text-red-600 font-bold animate-pulse">🎤 Habla ahora...</span>
+              ) : recognitionSupported ? (
+                '💡 Escriba tu pregunta, use el micrófono 🎤 o un número para menús'
+              ) : (
+                '💡 Escriba tu pregunta en texto libre o un número para usar menús'
+              )}
             </p>
           </div>
         </div>
