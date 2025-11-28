@@ -513,7 +513,7 @@ class ChatbotService {
   }
 
   // Generar contexto para Gemini con información de la empresa
-  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '') {
+  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '', ciudadMencionada = null, tipoEnvioCiudad = null, agenciasCiudad = [], tieneEnvioAereo = false) {
     // Validar que datosEmpresa no sea null
     if (!datosEmpresa) {
       console.error('⚠️ datosEmpresa es null, usando datos por defecto');
