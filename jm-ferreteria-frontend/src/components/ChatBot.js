@@ -101,6 +101,14 @@ const ChatBot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Función para enviar mensaje desde voz (definida antes del useEffect)
+  const sendMessageFromVoice = async (transcript) => {
+    if (!transcript.trim()) return;
+    
+    setInput(transcript);
+    await processMessage(transcript);
+  };
+
   // Verificar soporte de APIs de voz al montar
   useEffect(() => {
     // Verificar soporte de reconocimiento de voz
