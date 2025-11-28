@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaRobot, FaPhone, FaMapMarkerAlt, FaClock, FaCreditCard, FaTruck, FaShieldAlt, FaEnvelope, FaTimes, FaComments } from 'react-icons/fa';
+import { FaRobot, FaPhone, FaMapMarkerAlt, FaClock, FaCreditCard, FaTruck, FaShieldAlt, FaEnvelope, FaTimes, FaComments, FaMicrophone, FaMicrophoneSlash, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 import chatbotService from '../services/chatbotService';
 import { empresaService } from '../services/empresaService';
 
@@ -21,6 +21,14 @@ const ChatBot = () => {
   const [ciudades, setCiudades] = useState([]);
   const [ciudadSeleccionada, setCiudadSeleccionada] = useState(null);
   const messagesEndRef = useRef(null);
+  
+  // Estados para funcionalidad de voz
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [recognitionSupported, setRecognitionSupported] = useState(false);
+  const [synthesisSupported, setSynthesisSupported] = useState(false);
+  const recognitionRef = useRef(null);
+  const synthesisRef = useRef(null);
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -92,6 +100,112 @@ const ChatBot = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Verificar soporte de APIs de voz al montar
+  useEffect(() => {
+    // Verificar soporte de reconocimiento de voz
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setRecognitionSupported(true);
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = 'es-PE';
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+        // Enviar el mensaje automáticamente después de reconocer
+        setTimeout(() => {
+          sendMessageFromVoice(transcript);
+        }, 300);
+      };
+      
+      recognitionRef.current.onerror = (event) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        setIsListening(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    // Verificar soporte de síntesis de voz
+    if ('speechSynthesis' in window) {
+      setSynthesisSupported(true);
+    }
+  }, []);
+
+  // Función para iniciar/detener reconocimiento de voz
+  const toggleListening = () => {
+    if (!recognitionSupported) {
+      alert('Tu navegador no soporta reconocimiento de voz. Por favor, usa Chrome o Edge.');
+      return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error al iniciar reconocimiento:', error);
+        setIsListening(false);
+      }
+    }
+  };
+
+  // Función para hablar el texto
+  const speakText = (text) => {
+    if (!synthesisSupported) return;
+    
+    // Detener cualquier síntesis anterior
+    window.speechSynthesis.cancel();
+    
+    // Limpiar HTML tags del texto
+    const cleanText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    
+    if (cleanText) {
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = 'es-PE';
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+      
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+      
+      synthesisRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Función para detener la síntesis
+  const stopSpeaking = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
+
+  // Función para enviar mensaje desde voz
+  const sendMessageFromVoice = async (transcript) => {
+    if (!transcript.trim()) return;
+    
+    setInput(transcript);
+    await processMessage(transcript);
+  };
 
   // Validar que la entrada sea solo un número
   const esNumeroValido = (texto) => {
@@ -534,6 +648,11 @@ const ChatBot = () => {
             opcionesNumeradas: false
           };
           setMessages(prev => [...prev, botMessage]);
+          
+          // Leer la respuesta con voz (después de un pequeño delay para que se renderice)
+          setTimeout(() => {
+            speakText(respuestaGemini.text);
+          }, 500);
         } else {
           // Error en Gemini, ofrecer usar menús
           const errorText = `🤖 ${respuestaGemini.error || 'No pude procesar tu mensaje.'}<br><br><strong>💡 Puedes usar el sistema de menús:</strong><br><br>1.- 🛍️ Ver productos<br>2.- 📞 Contacto<br>3.- 🕒 Horarios<br>4.- 📍 Ubicación<br>5.- 🚚 Entregas<br>6.- 🛡️ Garantía<br><br><strong>Escriba un número o intente otra pregunta:</strong>`;
@@ -1128,27 +1247,62 @@ const ChatBot = () => {
 
           {/* Input area */}
           <div className="border-t border-orange-100 bg-gradient-to-b from-white to-gray-50 p-5 shadow-inner">
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
+              {/* Botón de micrófono */}
+              {recognitionSupported && (
+                <button
+                  onClick={toggleListening}
+                  disabled={isTyping}
+                  className={`px-4 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 ${
+                    isListening 
+                      ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  } disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed`}
+                  title={isListening ? 'Detener grabación' : 'Hablar (micrófono)'}
+                >
+                  {isListening ? <FaMicrophoneSlash className="w-5 h-5" /> : <FaMicrophone className="w-5 h-5" />}
+                </button>
+              )}
+              
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escriba tu pregunta o un número..."
+                placeholder={isListening ? "🎤 Escuchando..." : "Escriba tu pregunta o un número..."}
                 className="flex-1 border-2 border-orange-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm"
-                disabled={isTyping}
+                disabled={isTyping || isListening}
               />
+              
+              {/* Botón para detener voz */}
+              {isSpeaking && (
+                <button
+                  onClick={stopSpeaking}
+                  className="px-4 py-3 rounded-xl bg-purple-500 hover:bg-purple-600 text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+                  title="Detener voz"
+                >
+                  <FaVolumeMute className="w-5 h-5" />
+                </button>
+              )}
+              
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() || isTyping}
+                disabled={!input.trim() || isTyping || isListening}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 font-semibold"
               >
                 Enviar
               </button>
             </div>
-            <p className="text-xs text-gray-600 mt-3 text-center font-medium">
-              💡 Escriba tu pregunta en texto libre o un número para usar menús
-            </p>
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-xs text-gray-600 text-center font-medium flex-1">
+                💡 Escriba tu pregunta en texto libre o un número para usar menús
+              </p>
+              {recognitionSupported && (
+                <p className="text-xs text-blue-600 ml-2">
+                  {isListening ? '🎤 Escuchando...' : '🎤 Presiona el micrófono para hablar'}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
