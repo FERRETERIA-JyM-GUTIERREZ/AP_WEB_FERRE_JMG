@@ -495,7 +495,7 @@ class ChatbotService {
   }
 
   // Generar contexto para Gemini con información de la empresa
-  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = []) {
+  async generarContextoGemini(datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '') {
     // Validar que datosEmpresa no sea null
     if (!datosEmpresa) {
       console.error('⚠️ datosEmpresa es null, usando datos por defecto');
@@ -617,6 +617,15 @@ class ChatbotService {
       enviosInfo += '- Disponible para toda la región Puno\n';
     }
     
+    // Información de lista de departamentos (solo cuando pregunten por envíos nacionales)
+    if (listaDepartamentos.length > 0) {
+      enviosInfo += `\n\n📋 DEPARTAMENTOS DISPONIBLES PARA ENVÍO NACIONAL:\n`;
+      listaDepartamentos.forEach((dept, idx) => {
+        enviosInfo += `${idx + 1}. ${dept}\n`;
+      });
+      enviosInfo += `\nTotal: ${listaDepartamentos.length} departamentos disponibles.\n`;
+    }
+    
     // Si se mencionó un departamento específico, agregar información de sus ciudades
     if (departamentoMencionado && ciudadesDelDepartamento.length > 0) {
       enviosInfo += `\n\n📍 INFORMACIÓN DEL DEPARTAMENTO ${departamentoMencionado.toUpperCase()}:\n`;
@@ -626,6 +635,19 @@ class ChatbotService {
         enviosInfo += `${idx + 1}. ${ciudad}\n`;
       });
       enviosInfo += `\nTotal: ${ciudadesDelDepartamento.length} ciudades/provincias disponibles para envío.\n`;
+      enviosInfo += `\nPuedes elegir entre envío aéreo (Shalom Aéreo) o terrestre según prefieras.\n`;
+    }
+    
+    // Si preguntan por provincias de Puno específicamente
+    if (provinciasPuno.length > 0) {
+      enviosInfo += `\n\n📍 PROVINCIAS DE PUNO DISPONIBLES PARA ENVÍO:\n`;
+      enviosInfo += `Hacemos envíos a todas las provincias del departamento de Puno por transporte público.\n\n`;
+      enviosInfo += `Provincias disponibles:\n`;
+      provinciasPuno.forEach((provincia, idx) => {
+        enviosInfo += `${idx + 1}. ${provincia}\n`;
+      });
+      enviosInfo += `\nTotal: ${provinciasPuno.length} provincias disponibles.\n`;
+      enviosInfo += `\nLa entrega se realiza en el terminal de transporte público de cada provincia.\n`;
     }
 
     const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre || 'JM Ferretería'}, una ferretería con ${datosEmpresa.añosExperiencia || '9+ años'} de experiencia.
@@ -668,41 +690,66 @@ MÉTODOS DE PAGO:
 TIPOS DE ENVÍO DISPONIBLES:
 1. ✈️ ENVÍOS AÉREOS (Shalom Aéreo): A nivel nacional, entrega en terminal de agencia Shalom
 2. 🚚 ENVÍOS TERRESTRES: A nivel nacional, entrega en terminal de transporte
-3. 🚛 DELIVERY LOCAL: Entrega a domicilio en Juliaca y alrededores (24-48 horas)
+3. 🚛 DELIVERY LOCAL: Entrega a domicilio en Juliaca y San Miguel
+   - Horario de entrega: Todos los días de 8:00 AM a 5:00 PM
+   - Tiempo: 24-48 horas
+   - Costo según distancia
 4. 🚌 DELIVERY A PROVINCIA DE PUNO: Entrega en terminal de transporte público para toda la región Puno${enviosInfo}${categoriasInfo}${productosInfo}
+
+${catalogoUrl ? `\n🔗 LINK DEL CATÁLOGO: ${catalogoUrl}\n` : ''}
 
 INSTRUCCIONES:
 1. Responde de forma amigable y profesional, siendo DETALLADO y COMPLETO
-2. Si el usuario pregunta por productos, menciona TODAS las categorías disponibles y lista TODOS los productos de cada categoría con SUS PRECIOS (siempre muestra el precio si está disponible en la base de datos)
-3. Si pregunta por precios, SIEMPRE menciona los precios que están disponibles en la base de datos. Si un producto no tiene precio, di "Precio: Consultar"
-4. Si pregunta por entregas/envíos, explica TODOS los tipos disponibles:
-   - Envíos AÉREOS (Shalom Aéreo) a nivel nacional - reconoce palabras: "aéreo", "aereo", "avión", "avion", "shalom aéreo"
-   - Envíos TERRESTRES a nivel nacional - reconoce palabras: "terrestre", "bus", "ómnibus", "omnibus", "transporte terrestre"
-   - Delivery LOCAL en Juliaca y alrededores - reconoce palabras: "delivery", "domicilio", "local", "juliaca"
-   - Delivery a PROVINCIA DE PUNO por transporte público - reconoce palabras: "puno", "provincia", "transporte público", "transporte publico"
-5. Si el usuario pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento específico (como Cusco, Lima, Arequipa, etc.):
+2. Si el usuario pregunta "¿qué productos tienen?" o "¿qué venden?":
+   - Muestra las categorías disponibles
+   - Lista algunos productos destacados con sus precios
+   - Si quiere ver más productos, sugiere: "Puedes ver más productos en nuestro catálogo: [LINK DEL CATÁLOGO] o puedes comunicarte directamente con nosotros al ${datosEmpresa.contacto?.telefono || '+51 960 604 850'}"
+3. Si pregunta "¿venden [PRODUCTO]?" o "¿tienen [PRODUCTO]?":
+   - Busca el producto en la lista de productos disponibles
+   - Si lo encuentras, muestra el producto con su precio y categoría
+   - Si no lo encuentras, di que no está disponible pero puede ver más productos en el catálogo o contactar directamente
+4. Si pregunta por precios, SIEMPRE menciona los precios que están disponibles en la base de datos. Si un producto no tiene precio, di "Precio: Consultar"
+5. Si pregunta "¿hacen envíos nacionales?" o "¿a qué partes hacen envíos?":
+   - Responde que SÍ, hacemos envíos a nivel nacional
+   - Muestra SOLO la lista de departamentos disponibles (la información está en el contexto)
+   - NO muestres ciudades, solo departamentos
+6. Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento específico (como Pasco, Cusco, Lima, etc.):
    - Responde que SÍ, hacemos envíos a ese departamento
-   - Muestra TODAS las ciudades/provincias disponibles de ese departamento (la información está en el contexto)
-   - Menciona que puede elegir entre envío aéreo o terrestre según prefiera
-6. RECONOCE estos términos relacionados con envíos:
+   - Muestra SOLO las ciudades/provincias de ESE departamento (la información está en el contexto)
+   - NO menciones otros departamentos, solo el que preguntaron
+   - Menciona que puede elegir entre envío aéreo o terrestre
+7. Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?":
+   - Responde que SÍ, hacemos envíos a todas las provincias de Puno
+   - Muestra TODAS las provincias de Puno disponibles (la información está en el contexto)
+   - Menciona que la entrega es en terminal de transporte público
+8. Si pregunta por entregas/envíos, explica los tipos disponibles:
+   - Envíos AÉREOS (Shalom Aéreo) a nivel nacional - reconoce: "aéreo", "aereo", "avión", "avion", "shalom aéreo"
+   - Envíos TERRESTRES a nivel nacional - reconoce: "terrestre", "bus", "ómnibus", "omnibus", "transporte terrestre"
+   - Delivery LOCAL en Juliaca y San Miguel - reconoce: "delivery", "domicilio", "local", "juliaca", "san miguel"
+     * Horario: Todos los días de 8:00 AM a 5:00 PM
+   - Delivery a PROVINCIA DE PUNO por transporte público - reconoce: "puno", "provincia", "transporte público"
+9. RECONOCE estos términos relacionados con envíos:
    - "aéreo", "aereo", "avión", "avion", "shalom" = Envío aéreo
    - "terrestre", "bus", "ómnibus", "omnibus" = Envío terrestre
-   - "delivery", "domicilio" = Delivery local
+   - "delivery", "domicilio", "local" = Delivery local (Juliaca y San Miguel, 8 AM - 5 PM)
    - "puno", "provincia" = Delivery a provincia de Puno
-7. Proporciona información COMPLETA y DETALLADA de la base de datos, no respuestas genéricas
-8. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
-9. Si no sabes algo específico, ofrece contactar al vendedor
-10. Sé ESPECÍFICO y DETALLADO en tus respuestas
-11. NUNCA menciones gestión de inventarios, administración, o funciones internas del sistema
-12. Solo habla de productos, precios, envíos, contacto, horarios y servicios al cliente
+10. Proporciona información COMPLETA y DETALLADA de la base de datos, no respuestas genéricas
+11. Incluye TODOS los datos relevantes de la empresa cuando sean relevantes (horarios, ubicación, contacto, etc.)
+12. Si no sabes algo específico, ofrece contactar al vendedor
+13. Sé ESPECÍFICO y DETALLADO en tus respuestas
+14. NUNCA menciones gestión de inventarios, administración, o funciones internas del sistema
+15. Solo habla de productos, precios, envíos, contacto, horarios y servicios al cliente
 
 IMPORTANTE: 
 - Proporciona respuestas COMPLETAS y DETALLADAS basadas en la información de la base de datos
-- Si el usuario pregunta por productos, menciona TODAS las categorías y lista TODOS los productos con SUS PRECIOS
-- Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" o menciona un departamento, responde SÍ y muestra TODAS las ciudades/provincias disponibles de ese departamento que están en el contexto
-- Si pregunta por envíos, explica TODOS los tipos disponibles y RECONOCE los términos: "aéreo", "terrestre", "delivery", "domicilio", "puno"
+- Si pregunta "¿hacen envíos nacionales?" o "¿a qué partes hacen envíos?", muestra SOLO la lista de departamentos (no ciudades)
+- Si pregunta "¿hacen envíos a [DEPARTAMENTO]?" (ej: Pasco, Cusco), muestra SOLO las ciudades de ESE departamento, no otros
+- Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?", muestra TODAS las provincias de Puno
+- Si pregunta por productos, muestra algunos productos y sugiere ver más en el catálogo o contactar directamente
+- Si pregunta "¿venden [PRODUCTO]?", busca en la lista y si no está, sugiere el catálogo o contacto directo
+- Delivery local: Juliaca y San Miguel, horario 8:00 AM - 5:00 PM todos los días
 - SIEMPRE muestra los precios de los productos si están en la base de datos
-- Cuando mencionen un departamento, usa la información de ciudades que está en el contexto para responder
+- RECONOCE términos: "aéreo", "terrestre", "delivery", "domicilio", "puno", "provincia"
 - NUNCA menciones gestión de inventarios, administración o funciones internas
 - Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios`;
 
@@ -710,7 +757,7 @@ IMPORTANTE:
   }
 
   // Procesar mensaje con Google Gemini AI
-  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = []) {
+  async procesarConGemini(mensajeUsuario, datosEmpresa, historialMensajes = [], productosData = null, categoriasData = null, destinosEnvioData = null, departamentoMencionado = null, ciudadesDelDepartamento = [], provinciasPuno = [], listaDepartamentos = [], catalogoUrl = '') {
     // Verificar si hay API key configurada
     if (!this.geminiApiKey || this.geminiApiKey === '') {
       console.warn('⚠️ Gemini API Key no configurada');
@@ -722,7 +769,7 @@ IMPORTANTE:
 
     try {
       // Generar contexto con información de la empresa, productos, categorías, envíos y departamento mencionado
-      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData, departamentoMencionado, ciudadesDelDepartamento);
+      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData, departamentoMencionado, ciudadesDelDepartamento, provinciasPuno, listaDepartamentos, catalogoUrl);
       
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;

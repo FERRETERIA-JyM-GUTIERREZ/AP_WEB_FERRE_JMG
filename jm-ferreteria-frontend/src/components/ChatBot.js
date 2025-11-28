@@ -315,6 +315,7 @@ const ChatBot = () => {
         const departamentosData = await chatbotService.obtenerDepartamentos();
         let departamentoMencionado = null;
         let ciudadesDelDepartamento = [];
+        let provinciasPuno = [];
         
         if (departamentosData.success && departamentosData.departamentos.length > 0) {
           // Buscar si mencionan algún departamento en el mensaje
@@ -330,6 +331,14 @@ const ChatBot = () => {
               ciudadesDelDepartamento = ciudadesData.ciudades;
             }
           }
+          
+          // Si preguntan por Puno específicamente, obtener provincias
+          if (mensajeLower.includes('puno') && (mensajeLower.includes('provincia') || mensajeLower.includes('departamento') || mensajeLower.includes('envío') || mensajeLower.includes('envio'))) {
+            const ciudadesPunoData = await chatbotService.obtenerCiudadesPorDepartamento('PUNO');
+            if (ciudadesPunoData.success && ciudadesPunoData.ciudades.length > 0) {
+              provinciasPuno = ciudadesPunoData.ciudades;
+            }
+          }
         }
         
         // Obtener historial reciente para contexto
@@ -343,6 +352,10 @@ const ChatBot = () => {
         const categoriasData = await chatbotService.obtenerCategorias();
         const destinosEnvioData = await chatbotService.obtenerDestinosEnvio();
         
+        // Obtener URL base del frontend para el catálogo
+        const frontendUrl = window.location.origin;
+        const catalogoUrl = `${frontendUrl}/catalogo`;
+        
         // Procesar con Gemini (pasar información del departamento si se detectó)
         const respuestaGemini = await chatbotService.procesarConGemini(
           mensajeLimpio, 
@@ -352,7 +365,10 @@ const ChatBot = () => {
           categoriasData,
           destinosEnvioData,
           departamentoMencionado,
-          ciudadesDelDepartamento
+          ciudadesDelDepartamento,
+          provinciasPuno,
+          departamentosData.success ? departamentosData.departamentos : [],
+          catalogoUrl
         );
         
         if (respuestaGemini.success) {
