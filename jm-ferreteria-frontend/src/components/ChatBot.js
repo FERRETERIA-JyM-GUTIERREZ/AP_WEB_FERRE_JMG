@@ -1329,8 +1329,8 @@ const ChatBot = () => {
                   disabled={isTyping}
                   className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-110 active:scale-95 flex items-center justify-center ${
                     isListening 
-                      ? 'bg-gradient-to-br from-red-500 to-red-600 text-white animate-pulse shadow-red-300' 
-                      : 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 text-white hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700'
+                      ? 'bg-gradient-to-br from-red-600 to-red-700 text-white animate-pulse shadow-red-300' 
+                      : 'bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white hover:from-red-600 hover:via-red-700 hover:to-red-800'
                   } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
                   title={isListening ? 'Detener grabación' : 'Hablar (micrófono)'}
                 >
@@ -1376,7 +1376,7 @@ const ChatBot = () => {
                 💡 Escriba tu pregunta en texto libre o un número para usar menús
               </p>
               {recognitionSupported && (
-                <p className="text-xs text-emerald-600 font-medium whitespace-nowrap">
+                <p className="text-xs text-red-600 font-medium whitespace-nowrap">
                   {isListening ? '🎤 Escuchando...' : '🎤 Presiona el micrófono para hablar'}
                 </p>
               )}
