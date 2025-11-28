@@ -242,6 +242,24 @@ class ChatbotService {
     }
   }
 
+  // Obtener todas las agencias
+  async obtenerAgencias() {
+    try {
+      const response = await this.api.get('/envios/agencias');
+      if (response.data.success) {
+        return {
+          success: true,
+          agencias: response.data.data || [],
+          total: response.data.total || 0
+        };
+      }
+      return { success: false, agencias: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo agencias:', error);
+      return { success: false, agencias: [], total: 0 };
+    }
+  }
+
   // Obtener agencias por ciudad (para mostrar ubicación)
   async obtenerAgenciasPorCiudad(ciudad) {
     try {
@@ -887,20 +905,33 @@ INSTRUCCIONES:
 
 IMPORTANTE: 
 - Proporciona respuestas COMPLETAS y DETALLADAS basadas en la información de la base de datos
-- Si pregunta "¿hacen envíos nacionales?" o "¿a qué partes hacen envíos?", muestra SOLO la lista de departamentos (no ciudades)
-- Si pregunta "¿hacen envíos a [LUGAR]?" (ej: Sandia, Pasco, Cusco):
-  * Responde DIRECTAMENTE si se envía o no a ese lugar
-  * Si SÍ se envía: muestra las ciudades de ese departamento
-  * Si NO se envía: di claramente que no se envía a ese lugar
-  * NO muestres la lista de departamentos si mencionaron un lugar específico
-- Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?", muestra TODAS las provincias de Puno
+- Si pregunta "¿hacen envíos nacionales?" o "¿a qué partes hacen envíos?":
+  * Muestra TODAS las opciones disponibles:
+    - Lista COMPLETA de destinos AÉREOS (Shalom Aéreo)
+    - Lista COMPLETA de destinos TERRESTRES (Shalom Terrestre)
+    - Delivery Local (Juliaca y San Miguel)
+    - Provincias de Puno (transporte público) con lista COMPLETA de las 13 provincias
+- Si pregunta "¿hacen envíos a [CIUDAD]?" (ej: Camaná, Mollendo, Arequipa, Lima, Cusco):
+  * Busca en la lista de "AGENCIAS SHALOM TERRESTRE" si hay agencias de esa ciudad
+  * Si hay agencias, muestra TODAS con direcciones COMPLETAS, referencias y horarios
+  * Busca en "DESTINOS DISPONIBLES PARA ENVÍO AÉREO" y "DESTINOS DISPONIBLES PARA ENVÍO TERRESTRE"
+  * Muestra qué tipo de envío está disponible (prioriza terrestre)
+  * Responde DIRECTAMENTE con información específica de esa ciudad
+- Si pregunta "¿qué agencias tienen?" o "¿dónde puedo recoger?":
+  * Muestra TODAS las agencias Shalom organizadas por ciudad
+  * Incluye direcciones COMPLETAS, referencias, teléfonos y horarios
+  * Si pregunta por una ciudad específica, muestra SOLO las agencias de esa ciudad
+- Si pregunta "¿hacen envíos a provincias de Puno?" o "¿envíos dentro de Puno?":
+  * Muestra la lista COMPLETA de las 13 provincias de Puno disponibles
+  * Menciona que es por transporte público y que el cliente recoge en el terminal
 - Si pregunta por productos, muestra algunos productos y sugiere ver más en el catálogo o contactar directamente
 - Si pregunta "¿venden [PRODUCTO]?", busca en la lista y si no está, sugiere el catálogo o contacto directo
 - Delivery local: Juliaca y San Miguel, horario 8:00 AM - 5:00 PM todos los días
 - SIEMPRE muestra los precios de los productos si están en la base de datos
-- RECONOCE términos: "aéreo", "terrestre", "delivery", "domicilio", "puno", "provincia"
+- RECONOCE términos: "aéreo", "terrestre", "delivery", "domicilio", "puno", "provincia", "shalom", "agencias"
 - NUNCA menciones gestión de inventarios, administración o funciones internas
-- Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios`;
+- Solo proporciona información que el cliente necesita: productos, precios, envíos, contacto, horarios
+- Sé INTELIGENTE: usa TODA la información disponible en el contexto para dar respuestas COMPLETAS y DETALLADAS`;
 
     return contexto;
   }
