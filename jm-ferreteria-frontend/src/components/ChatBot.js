@@ -33,6 +33,9 @@ const ChatBot = () => {
   const messageSentRef = useRef(false);
   const datosEmpresaRef = useRef(null);
   const processMessageRef = useRef(null);
+  const continuousRecognitionRef = useRef(null); // Reconocimiento continuo en segundo plano
+  const continuousListeningActiveRef = useRef(false);
+  const isOpenRef = useRef(false);
 
   // Cargar datos de la empresa al montar
   useEffect(() => {
@@ -213,6 +216,133 @@ const ChatBot = () => {
       setSynthesisSupported(true);
     }
   }, []);
+
+  // Reconocimiento continuo en segundo plano para activación por voz
+  useEffect(() => {
+    // Función para detectar la frase de activación
+    const detectActivationPhrase = (text) => {
+      const lowerText = text.toLowerCase();
+      // Buscar: "hola" + "chatbot" (o "chat bot") + "consulta"
+      const hasHola = lowerText.includes('hola');
+      const hasChatbot = lowerText.includes('chatbot') || lowerText.includes('chat bot');
+      const hasConsulta = lowerText.includes('consulta') || lowerText.includes('consultar');
+      
+      // Debe tener las tres palabras clave
+      return hasHola && hasChatbot && hasConsulta;
+    };
+
+    // Función para iniciar reconocimiento continuo
+    const startContinuousRecognition = () => {
+      if (continuousListeningActiveRef.current) return; // Ya está activo
+      
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        continuousRecognitionRef.current = new SpeechRecognition();
+        continuousRecognitionRef.current.lang = 'es-PE';
+        continuousRecognitionRef.current.continuous = true; // Escuchar continuamente
+        continuousRecognitionRef.current.interimResults = false;
+        
+        continuousRecognitionRef.current.onresult = (event) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.trim();
+          
+          // Verificar si detecta la frase de activación
+          if (detectActivationPhrase(transcript)) {
+            // Abrir el chatbot si está cerrado
+            if (!isOpenRef.current) {
+              setIsOpen(true);
+              isOpenRef.current = true;
+              
+              // Reproducir mensaje de bienvenida por voz
+              setTimeout(() => {
+                const welcomeText = 'Hola, soy tu asistente virtual. ¿Qué necesitas hoy?';
+                speakText(welcomeText);
+              }, 500);
+            }
+          }
+        };
+        
+        continuousRecognitionRef.current.onerror = (event) => {
+          // Si el error es "no-speech" o "audio-capture", intentar reiniciar
+          if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            // Reiniciar después de un breve delay
+            setTimeout(() => {
+              if (continuousListeningActiveRef.current && continuousRecognitionRef.current) {
+                try {
+                  continuousRecognitionRef.current.start();
+                } catch (e) {
+                  // Ignorar errores de reinicio
+                }
+              }
+            }, 1000);
+          }
+        };
+        
+        continuousRecognitionRef.current.onend = () => {
+          // Reiniciar automáticamente si aún está activo
+          if (continuousListeningActiveRef.current) {
+            try {
+              continuousRecognitionRef.current.start();
+            } catch (e) {
+              // Si falla, intentar de nuevo después
+              setTimeout(() => {
+                if (continuousListeningActiveRef.current) {
+                  startContinuousRecognition();
+                }
+              }, 2000);
+            }
+          }
+        };
+        
+        // Iniciar reconocimiento
+        try {
+          continuousRecognitionRef.current.start();
+          continuousListeningActiveRef.current = true;
+        } catch (error) {
+          console.log('No se pudo iniciar reconocimiento continuo:', error);
+        }
+      }
+    };
+
+    // Pedir permisos y iniciar reconocimiento continuo
+    const requestMicrophonePermission = async () => {
+      try {
+        // Intentar acceder al micrófono (esto mostrará el diálogo de Chrome)
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Si se obtiene el stream, detenerlo (solo necesitábamos el permiso)
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Iniciar reconocimiento continuo después de obtener permisos
+        setTimeout(() => {
+          startContinuousRecognition();
+        }, 500);
+      } catch (error) {
+        // Usuario rechazó permisos o hay un error
+        console.log('Permisos de micrófono no otorgados o error:', error);
+        continuousListeningActiveRef.current = false;
+      }
+    };
+
+    // Intentar pedir permisos al montar (solo una vez)
+    requestMicrophonePermission();
+
+    // Cleanup al desmontar
+    return () => {
+      continuousListeningActiveRef.current = false;
+      if (continuousRecognitionRef.current) {
+        try {
+          continuousRecognitionRef.current.stop();
+        } catch (e) {
+          // Ignorar errores al detener
+        }
+        continuousRecognitionRef.current = null;
+      }
+    };
+  }, []); // Solo se ejecuta una vez al montar
+
+  // Actualizar referencia de isOpen
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   // Función para iniciar/detener reconocimiento de voz
   const toggleListening = () => {
