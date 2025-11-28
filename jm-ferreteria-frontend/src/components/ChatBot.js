@@ -207,14 +207,6 @@ const ChatBot = () => {
     setIsSpeaking(false);
   };
 
-  // Función para enviar mensaje desde voz
-  const sendMessageFromVoice = async (transcript) => {
-    if (!transcript.trim()) return;
-    
-    setInput(transcript);
-    await processMessage(transcript);
-  };
-
   // Validar que la entrada sea solo un número
   const esNumeroValido = (texto) => {
     const numero = parseInt(texto.trim());
