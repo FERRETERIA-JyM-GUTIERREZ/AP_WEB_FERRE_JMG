@@ -279,6 +279,24 @@ class ChatbotService {
     }
   }
 
+  // Obtener ciudades disponibles con agencias
+  async obtenerCiudadesConAgencias() {
+    try {
+      const response = await this.api.get('/envios/ciudades');
+      if (response.data.success) {
+        return {
+          success: true,
+          ciudades: response.data.data || [],
+          total: response.data.data?.length || 0
+        };
+      }
+      return { success: false, ciudades: [], total: 0 };
+    } catch (error) {
+      console.error('Error obteniendo ciudades con agencias:', error);
+      return { success: false, ciudades: [], total: 0 };
+    }
+  }
+
   // Manejar opciones de contacto
   manejarOpcionContacto(numero, datosEmpresa) {
     switch (numero) {
@@ -650,6 +668,47 @@ class ChatbotService {
       enviosInfo += `\nLa entrega se realiza en el terminal de transporte público de cada provincia.\n`;
     }
 
+    // Si se mencionó una ciudad específica, agregar información detallada
+    if (ciudadMencionada && tipoEnvioCiudad) {
+      enviosInfo += `\n\n📍 INFORMACIÓN ESPECÍFICA DE ${ciudadMencionada.toUpperCase()}:\n`;
+      enviosInfo += `✅ SÍ, hacemos envíos a ${ciudadMencionada}.\n\n`;
+      
+      // Tipo de envío específico
+      if (tipoEnvioCiudad === 'aereo') {
+        enviosInfo += `✈️ TIPO DE ENVÍO: AÉREO (Shalom Aéreo)\n`;
+        enviosInfo += `- Solo disponible envío AÉREO para ${ciudadMencionada}\n`;
+        enviosInfo += `- NO hay envío terrestre disponible para ${ciudadMencionada}\n`;
+      } else if (tipoEnvioCiudad === 'terrestre') {
+        enviosInfo += `🚚 TIPO DE ENVÍO: TERRESTRE\n`;
+        enviosInfo += `- Solo disponible envío TERRESTRE para ${ciudadMencionada}\n`;
+        enviosInfo += `- NO hay envío aéreo disponible para ${ciudadMencionada}\n`;
+      }
+      
+      // Agencias específicas si hay
+      if (agenciasCiudad && agenciasCiudad.length > 0) {
+        enviosInfo += `\n📍 PUNTOS DE RECOGIDA EN ${ciudadMencionada.toUpperCase()}:\n`;
+        agenciasCiudad.forEach((agencia, idx) => {
+          enviosInfo += `${idx + 1}. ${agencia.nombre}\n`;
+          enviosInfo += `   Dirección: ${agencia.direccion}\n`;
+          if (agencia.referencia) {
+            enviosInfo += `   Referencia: ${agencia.referencia}\n`;
+          }
+          if (agencia.telefono) {
+            enviosInfo += `   Teléfono: ${agencia.telefono}\n`;
+          }
+          if (agencia.horarios) {
+            enviosInfo += `   Horarios: ${agencia.horarios}\n`;
+          }
+          enviosInfo += `\n`;
+        });
+        enviosInfo += `Total: ${agenciasCiudad.length} punto(s) de recogida disponible(s) en ${ciudadMencionada}.\n`;
+      } else {
+        enviosInfo += `\n📍 PUNTO DE RECOGIDA:\n`;
+        enviosInfo += `- La entrega se realiza en el terminal de ${tipoEnvioCiudad === 'aereo' ? 'agencia Shalom Aéreo' : 'transporte terrestre'} en ${ciudadMencionada}\n`;
+        enviosInfo += `- El cliente puede recoger su pedido en el terminal\n`;
+      }
+    }
+
     const contexto = `Eres un asistente virtual de ${datosEmpresa.nombre || 'JM Ferretería'}, una ferretería con ${datosEmpresa.añosExperiencia || '9+ años'} de experiencia.
 
 INFORMACIÓN DE LA EMPRESA:
@@ -713,14 +772,20 @@ INSTRUCCIONES:
    - Responde que SÍ, hacemos envíos a nivel nacional
    - Muestra SOLO la lista de departamentos disponibles (la información está en el contexto)
    - NO muestres ciudades, solo departamentos
-6. Si pregunta "¿hacen envíos a [LUGAR]?" o menciona un lugar específico (como Sandia, Pasco, Cusco, Lima, etc.):
-   - PRIMERO verifica si ese lugar está en la lista de departamentos o ciudades disponibles
-   - Si SÍ está disponible: Responde "SÍ, hacemos envíos a [LUGAR]" y muestra las ciudades/provincias de ese departamento
+6. Si pregunta "¿hacen envíos a [CIUDAD]?" o menciona una ciudad específica (como Camana, Arequipa, Lima, Cusco, etc.):
+   - PRIMERO verifica si hay información específica de esa ciudad en el contexto (busca en "INFORMACIÓN ESPECÍFICA DE [CIUDAD]")
+   - Si SÍ hay información específica de esa ciudad:
+     * Responde "SÍ, hacemos envíos a [CIUDAD]"
+     * Muestra el TIPO DE ENVÍO ESPECÍFICO (AÉREO o TERRESTRE) - NO menciones ambos si solo hay uno disponible
+     * Si dice "AÉREO", di SOLO que hay envío aéreo, NO menciones terrestre
+     * Si dice "TERRESTRE", di SOLO que hay envío terrestre, NO menciones aéreo
+     * Muestra TODOS los puntos de recogida (agencias) con sus direcciones, referencias y horarios
+     * Sé PRECISO: si solo hay aéreo, di solo aéreo; si solo hay terrestre, di solo terrestre
+   - Si NO hay información específica pero está en la lista de departamentos:
+     * Responde "SÍ, hacemos envíos a [DEPARTAMENTO]" y muestra las ciudades/provincias de ese departamento
+     * Menciona que puede elegir entre envío aéreo o terrestre según el destino
    - Si NO está disponible: Responde "No, actualmente no hacemos envíos a [LUGAR]" y ofrece contactar al vendedor
-   - Muestra SOLO las ciudades/provincias de ESE departamento (la información está en el contexto)
-   - NO menciones otros departamentos, solo el que preguntaron
-   - Menciona que puede elegir entre envío aéreo o terrestre
-   - IMPORTANTE: Responde DIRECTAMENTE, no muestres la lista de departamentos si mencionaron un lugar específico
+   - IMPORTANTE: Si hay información específica de la ciudad, USA ESA INFORMACIÓN EXACTA - no inventes tipos de envío
 7. Si pregunta "¿hacen envíos dentro del departamento de Puno?" o "¿envíos a provincias de Puno?":
    - Responde que SÍ, hacemos envíos a todas las provincias de Puno
    - Muestra TODAS las provincias de Puno disponibles (la información está en el contexto)
@@ -776,7 +841,7 @@ IMPORTANTE:
 
     try {
       // Generar contexto con información de la empresa, productos, categorías, envíos y departamento mencionado
-      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData, departamentoMencionado, ciudadesDelDepartamento, provinciasPuno, listaDepartamentos, catalogoUrl);
+      const contexto = await this.generarContextoGemini(datosEmpresa, historialMensajes, productosData, categoriasData, destinosEnvioData, departamentoMencionado, ciudadesDelDepartamento, provinciasPuno, listaDepartamentos, catalogoUrl, ciudadMencionada, tipoEnvioCiudad, agenciasCiudad);
       
       // Preparar el prompt con contexto
       const prompt = `${contexto}\n\nUsuario: ${mensajeUsuario}\nAsistente:`;

@@ -194,6 +194,57 @@ const ChatBot = () => {
           }
         }
         
+        // Detectar si mencionan una ciudad específica y obtener información detallada
+        let ciudadMencionada = null;
+        let tipoEnvioCiudad = null;
+        let agenciasCiudad = [];
+        
+        if (preguntaEnvios) {
+          // Obtener destinos y agencias para buscar ciudades específicas
+          const destinosData = await chatbotService.obtenerDestinosEnvio();
+          const ciudadesData = await chatbotService.obtenerCiudadesConAgencias();
+          
+          // Buscar si mencionan una ciudad específica en destinos_envio
+          if (destinosData.success && destinosData.destinos.length > 0) {
+            const ciudadEncontrada = destinosData.destinos.find(destino => {
+              const nombreDestino = destino.nombre.toLowerCase();
+              return mensajeLower.includes(nombreDestino) || nombreDestino.includes(mensajeLower.split(' ').find(word => word.length > 3) || '');
+            });
+            
+            if (ciudadEncontrada) {
+              ciudadMencionada = ciudadEncontrada.nombre;
+              tipoEnvioCiudad = ciudadEncontrada.tipo_envio; // 'aereo' o 'terrestre'
+              
+              // Obtener agencias de esa ciudad
+              const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada.nombre);
+              if (agenciasData.success && agenciasData.agencias.length > 0) {
+                agenciasCiudad = agenciasData.agencias;
+              }
+            }
+          }
+          
+          // Si no se encontró en destinos, buscar en ciudades con agencias
+          if (!ciudadMencionada && ciudadesData.success && ciudadesData.ciudades.length > 0) {
+            const ciudadEncontrada = ciudadesData.ciudades.find(ciudad => {
+              const nombreCiudad = ciudad.ciudad.toLowerCase();
+              return mensajeLower.includes(nombreCiudad) || nombreCiudad.includes(mensajeLower.split(' ').find(word => word.length > 3) || '');
+            });
+            
+            if (ciudadEncontrada) {
+              ciudadMencionada = ciudadEncontrada.ciudad;
+              
+              // Obtener agencias de esa ciudad
+              const agenciasData = await chatbotService.obtenerAgenciasPorCiudad(ciudadEncontrada.ciudad);
+              if (agenciasData.success && agenciasData.agencias.length > 0) {
+                agenciasCiudad = agenciasData.agencias;
+              }
+              
+              // Si no está en destinos_envio, asumir que es terrestre (ya que las agencias son de Shalom terrestre)
+              tipoEnvioCiudad = 'terrestre';
+            }
+          }
+        }
+        
         // Si pregunta por productos, mostrar productos reales
         if (preguntaProductos) {
           const categoriasData = await chatbotService.obtenerCategorias();
@@ -442,6 +493,9 @@ const ChatBot = () => {
           ciudadesDelDepartamento,
           provinciasPuno,
           departamentosData.success ? departamentosData.departamentos : [],
+          ciudadMencionada,
+          tipoEnvioCiudad,
+          agenciasCiudad,
           catalogoUrl
         );
         
